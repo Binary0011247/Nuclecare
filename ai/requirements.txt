@@ -1,0 +1,4 @@
+# nuclecare/ai/requirements.txt (Updated)
+Flask
+Flask-Cors
+numpy
