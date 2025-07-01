@@ -25,11 +25,26 @@ router.get('/latest-vitals', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+router.get('/vitals-history', async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            `SELECT systolic, diastolic, heart_rate, sp_o2, weight, created_at 
+             FROM patients_vitals 
+             WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
+             ORDER BY created_at ASC`,
+            [req.user.id]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 // POST /api/patient/pulse-check
 // Now saves vitals for the LOGGED-IN user
 router.post('/pulse-check', async (req, res) => {
-    const { mood, systolic, diastolic, symptoms } = req.body;
+    const { mood, systolic, diastolic, symptoms, heart_rate, sp_o2, weight } = req.body;
     const userId = req.user.id; // <-- Use ID from the authenticated token
 
     try {
@@ -38,12 +53,12 @@ router.post('/pulse-check', async (req, res) => {
         });
         const { healthScore, insight } = aiResponse.data;
 
-        const query = `
-            INSERT INTO patients_vitals (user_id, mood, systolic, diastolic, symptoms_text, health_score, insight_text)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING *;
+       const query = `
+    INSERT INTO patients_vitals (user_id, mood, systolic, diastolic, symptoms_text, health_score, insight_text, heart_rate, sp_o2, weight)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    RETURNING *;
         `;
-        const values = [userId, mood, systolic, diastolic, symptoms, healthScore, insight];
+        const values = [userId, mood, systolic, diastolic, symptoms, healthScore, insight, heart_rate, sp_o2, weight];
         
         const { rows } = await db.query(query, values);
         res.status(201).json(rows[0]);

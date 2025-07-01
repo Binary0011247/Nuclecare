@@ -5,16 +5,32 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const db = require('../db');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // @route   POST api/auth/register
 // @desc    Register a user
 // @access  Public
+// In backend/src/routes/auth.js
+
+// @route   POST api/auth/register
+// @desc    Register a user
+// @access  Public
+// In backend/src/routes/auth.js
+
+// @route   POST api/auth/register
+// @desc    Register a user with a specific role
+// @access  Public
 router.post(
     '/register',
     [
+        // Existing validators
         check('fullName', 'Full name is required').not().isEmpty(),
         check('email', 'Please include a valid email').isEmail(),
         check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
+        // --- NEW VALIDATOR ---
+        // Ensures the role is one of the two allowed values.
+        check('role', 'A valid role is required').isIn(['patient', 'clinician']),
+        check('clinicianCode').optional({ checkFalsy: true }).isString().trim()
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -22,28 +38,61 @@ router.post(
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { fullName, email, password } = req.body;
+        // --- NEW: Get role from the request body ---
+        const { fullName, email, password, role,clinicianCode } = req.body;
 
         try {
-            // Check if user exists
             let userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userResult.rows.length > 0) {
                 return res.status(400).json({ msg: 'User already exists' });
+
+            }
+             let generatedCode = null;
+              let generatedMrn = null;
+            if (role === 'clinician') {
+                const namePart = fullName.substring(0, 4).toUpperCase().replace(/\s/g, '');
+                const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+                generatedCode = `${namePart}-${randomPart}`;
+            }
+            if (role === 'patient') {
+                const randomPart1 = Math.floor(1000 + Math.random() * 9000);
+                const randomPart2 = Math.floor(1000 + Math.random() * 9000);
+                generatedMrn = `NUC-${randomPart1}-${randomPart2}`;
             }
 
-            // Hash password
             const salt = await bcrypt.genSalt(10);
             const passwordHash = await bcrypt.hash(password, salt);
 
-            // Save user to database
+            // --- UPDATED INSERT QUERY ---
+            // We now explicitly insert the role provided by the user.
             const newUserResult = await db.query(
-                'INSERT INTO users (full_name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
-                [fullName, email, passwordHash]
+                'INSERT INTO users (full_name, email, password_hash, role,clinician_code,mrn) VALUES ($1, $2, $3, $4, $5,$6) RETURNING *',
+                [fullName, email, passwordHash, role, generatedCode,generatedMrn] // Add 'role' to the values array
             );
-            const userId = newUserResult.rows[0].id;
 
-            // Return jsonwebtoken
-            const payload = { user: { id: userId } };
+            const user = newUserResult.rows[0];
+             if (role === 'patient') {
+                if (!clinicianCode) {
+                    return res.status(400).json({ msg: 'A valid clinician code is required for patient registration.' });
+                }
+                const clinicianResult = await db.query(
+                    "SELECT id FROM users WHERE clinician_code = $1 AND role = 'clinician'", 
+                    [clinicianCode.trim().toUpperCase()]
+                );
+                
+                if (clinicianResult.rows.length === 0) {
+                    return res.status(400).json({ msg: 'Invalid Clinician Code provided.' });
+                }
+                const clinicianId = clinicianResult.rows[0].id;
+
+                await db.query(
+                    'INSERT INTO patient_clinician_assignments (patient_id, clinician_id) VALUES ($1, $2)',
+                    [user.id, clinicianId]
+                );
+            }
+
+            // This part is already correct and doesn't need to change
+            const payload = { user: { id: user.id, role: user.role } };
             jwt.sign(
                 payload,
                 process.env.JWT_SECRET,
@@ -59,7 +108,6 @@ router.post(
         }
     }
 );
-
 // @route   POST api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public
@@ -93,7 +141,7 @@ router.post(
             }
 
             // Return jsonwebtoken
-            const payload = { user: { id: user.id } };
+            const payload = { user: { id: user.id, role: user.role } }
             jwt.sign(
                 payload,
                 process.env.JWT_SECRET,
@@ -109,5 +157,22 @@ router.post(
         }
     }
 );
+router.get('/me', authMiddleware, async (req, res) => {
+    try {
+        const user = await db.query(
+            "SELECT id, full_name, email, role, clinician_code FROM users WHERE id = $1", 
+            [req.user.id]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        res.json(user.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 module.exports = router;

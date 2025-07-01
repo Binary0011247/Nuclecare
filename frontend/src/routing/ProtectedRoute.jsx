@@ -1,24 +1,23 @@
-// frontend/src/routing/ProtectedRoute.jsx (Corrected Version)
-
 import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import Spinner from '../components/layout/Spinner.jsx';
 
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useContext(AuthContext);
+    // We now check both isLoading and isAuthenticated
+    const { isAuthenticated, isLoading } = useContext(AuthContext);
 
-    if (loading) {
-        // While the auth state is being determined, show a spinner
+    // If the context is still loading the token state, show a spinner
+    if (isLoading) {
         return <Spinner />;
     }
 
+    // If loading is finished AND the user is not authenticated, redirect
     if (!isAuthenticated) {
-        // If not authenticated, redirect to the login page
         return <Navigate to="/login" replace />;
     }
 
-    // If authenticated, render the child component that was passed in
+    // Otherwise, show the requested page
     return children;
 };
 

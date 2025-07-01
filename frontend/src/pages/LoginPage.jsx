@@ -1,90 +1,245 @@
-// frontend/src/pages/LoginPage.jsx
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext.jsx'; // Note .jsx extension
-import styled from 'styled-components';
+import { AuthContext } from '../context/AuthContext.jsx';
+import { jwtDecode } from 'jwt-decode';
+import styled, { keyframes } from 'styled-components';
+import { FaEnvelope, FaLock } from 'react-icons/fa';
 
-const AuthContainer = styled.div`
+// --- Styled Components for the UI ---
+
+const PageContainer = styled.div`
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #1a1d23;
+  color: white;
+`;
+
+const VisualPanel = styled.div`
+  width: 50%;
+  background: radial-gradient(circle, #2c3e50, #1a1d23);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  text-align: center;
+
+  h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    font-weight: 300;
+  }
+  
+  p {
+    font-size: 1.2rem;
+    color: #bdc3c7;
+    max-width: 450px;
+    line-height: 1.6;
+  }
+
+  /* Responsive: Hide this panel on smaller screens */
+  @media (max-width: 900px) {
+    display: none;
+  }
+`;
+
+const FormPanel = styled.div`
+  width: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  padding: 40px;
+  
+  /* Responsive: Make this panel take up the full width on smaller screens */
+  @media (max-width: 900px) {
+    width: 100%;
+  }
 `;
-const AuthBox = styled.div`
-  background: #282c34; padding: 40px; border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 400px; text-align: center;
-  h1 { color: #61dafb; }
+
+const FormBox = styled.div`
+  max-width: 400px;
+  width: 100%;
+
+  h2 {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  p {
+    color: #7f8c8d;
+    text-align: center;
+    margin-bottom: 30px;
+  }
 `;
-const Input = styled.input`
-  width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px;
-  border: 1px solid #555; background: #333; color: white; font-size: 16px;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const InputWrapper = styled.div`
+  position: relative;
+`;
+
+const Icon = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: #7f8c8d;
+  z-index: 1;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 15px 15px 15px 50px;
+  border-radius: 8px;
+  border: 1px solid #34495e;
+  background: #2c3e50;
+  color: white;
+  font-size: 1rem;
   box-sizing: border-box;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #61dafb;
+  }
 `;
-const Button = styled.button`
-  width: 100%; padding: 12px; border-radius: 6px; border: none;
-  background: #61dafb; color: black; font-size: 16px; cursor: pointer;
-  font-weight: bold; transition: background 0.2s;
-  &:hover { background: #52b8d8; }
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
 `;
+
+const Spinner = styled.div`
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: black;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 15px;
+  border-radius: 8px;
+  border: none;
+  background: #61dafb;
+  color: #1a1d23;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  &:hover {
+    background: #52b8d8;
+  }
+  
+  &:disabled {
+    background: #7f8c8d;
+    cursor: not-allowed;
+  }
+`;
+
 const SubText = styled.p`
-  margin-top: 20px;
-  a { color: #61dafb; text-decoration: none; }
+  margin-top: 20px !important;
+  text-align: center;
+  color: #7f8c8d !important;
+
+  a {
+    color: #61dafb;
+    text-decoration: none;
+    font-weight: bold;
+  }
 `;
-const ErrorMsg = styled.div`
-  color: #ff6b6b; background: rgba(255, 107, 107, 0.1);
-  padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: left;
+
+const ErrorMessage = styled.div`
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
 `;
+
+// --- The React Component ---
 
 const LoginPage = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
- // In LoginPage.jsx
+    const onSubmit = async e => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
 
-const onSubmit = async e => {
-    e.preventDefault();
-    setError(''); // Clear previous errors
-    console.log("1. Form submitted. Attempting to log in with:", formData.email); // Log #1
-
-    try {
-        // This is where the call to the context/backend happens
-        await login(formData.email, formData.password);
-
-        console.log("2. Login API call was successful. Preparing to navigate."); // Log #2
-
-        // This is the navigation command
-        navigate('/dashboard');
-
-    } catch (err) {
-        // This block runs if the API call fails (e.g., status 400 or 500)
-        console.error("3. Login API call failed. Error response:", err.response); // Log #3
-        
-        // This is a more robust way to get the error message
-        const errorMsg = err.response?.data?.errors?.[0]?.msg || err.response?.data?.msg || 'Login failed. Please check your credentials.';
-        setError(errorMsg);
-    }
-};
+        try {
+            await login(formData.email, formData.password);
+            
+            // The token is now in localStorage. Decode it to find the user's role for navigation.
+            const token = localStorage.getItem('token');
+            const decoded = jwtDecode(token);
+            
+            if (decoded.user.role === 'clinician') {
+              navigate('/clinician/dashboard');
+            } else {
+              navigate('/dashboard');
+            }
+        } catch (err) {
+            const errorMsg = err.response?.data?.msg || 'Login failed. Please check your credentials.';
+            setError(errorMsg);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
-        <AuthContainer>
-            <AuthBox>
+        <PageContainer>
+            <VisualPanel>
                 <h1>Welcome Back</h1>
-                <p>Sign in to view your Health Aura</p>
-                <form onSubmit={onSubmit}>
-                    {error && <ErrorMsg>{error}</ErrorMsg>}
-                    <Input type="email" name="email" placeholder="Email" value={formData.email} onChange={onChange} required />
-                    <Input type="password" name="password" placeholder="Password" value={formData.password} onChange={onChange} required />
-                    <Button type="submit">Login</Button>
-                </form>
-                <SubText>
-                    Don't have an account? <Link to="/register">Sign Up</Link>
-                </SubText>
-            </AuthBox>
-        </AuthContainer>
+                <p>Your health data is a story. Let's see today's chapter.</p>
+            </VisualPanel>
+            <FormPanel>
+                <FormBox>
+                    <h2>Sign In</h2>
+                    <p>Enter your credentials to continue</p>
+                    <Form onSubmit={onSubmit}>
+                        {error && <ErrorMessage>{error}</ErrorMessage>}
+                        <InputWrapper>
+                          <Icon><FaEnvelope /></Icon>
+                          <StyledInput type="email" name="email" placeholder="Email" value={formData.email} onChange={onChange} required disabled={isLoading} />
+                        </InputWrapper>
+                        
+                        <InputWrapper>
+                          <Icon><FaLock /></Icon>
+                          <StyledInput type="password" name="password" placeholder="Password" value={formData.password} onChange={onChange} required disabled={isLoading} />
+                        </InputWrapper>
+                        
+                        <SubmitButton type="submit" disabled={isLoading}>
+                          {isLoading ? <Spinner /> : 'Login'}
+                        </SubmitButton>
+                    </Form>
+                    <SubText>
+                        Don't have an account? <Link to="/register">Sign Up</Link>
+                    </SubText>
+                </FormBox>
+            </FormPanel>
+        </PageContainer>
     );
 };
+
 export default LoginPage;

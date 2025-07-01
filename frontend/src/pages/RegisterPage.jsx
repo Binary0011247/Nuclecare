@@ -1,8 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
+import { jwtDecode } from 'jwt-decode';
 import styled, { keyframes } from 'styled-components';
-import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa'; // Import icons
+import { FaUser, FaEnvelope, FaLock, FaUserMd,FaStethoscope } from 'react-icons/fa';
 
 // --- Styled Components ---
 
@@ -23,18 +24,29 @@ const VisualPanel = styled.div`
   color: white;
   padding: 40px;
   text-align: center;
-  h1 {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    letter-spacing: 2px;
-  }
-  p {
-    font-size: 1.2rem;
-    color: #bdc3c7;
-  }
   @media (max-width: 900px) {
     display: none;
   }
+`;
+
+const LogoImage = styled.img`
+  width: 150px;
+  height: auto;
+  margin-bottom: 40px;
+`;
+
+const BrandTitle = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
+  color: white;
+`;
+
+const BrandSlogan = styled.p`
+  font-size: 1.1rem;
+  color: #bdc3c7;
+  max-width: 400px;
+  line-height: 1.6;
 `;
 
 const FormPanel = styled.div`
@@ -84,7 +96,7 @@ const Icon = styled.div`
 
 const StyledInput = styled.input`
   width: 100%;
-  padding: 15px 15px 15px 50px; /* Make space for the icon */
+  padding: 15px 15px 15px 50px;
   border-radius: 8px;
   border: 1px solid #34495e;
   background: #2c3e50;
@@ -92,6 +104,26 @@ const StyledInput = styled.input`
   font-size: 1rem;
   box-sizing: border-box;
   transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #61dafb;
+  }
+`;
+
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 15px 15px 15px 50px;
+  border-radius: 8px;
+  border: 1px solid #34495e;
+  background: #2c3e50;
+  color: white;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 
   &:focus {
     outline: none;
@@ -160,9 +192,9 @@ const ErrorMessage = styled.div`
 // --- The React Component ---
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '', role: 'patient' ,clinicianCode: ''});
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // New state for loading
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -170,31 +202,43 @@ const RegisterPage = () => {
 
   const onSubmit = async e => {
     e.preventDefault();
-    setError(''); // Clear previous errors
-
+    setError('');
+    
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     try {
       await register(formData);
-      navigate('/dashboard');
+      const token = localStorage.getItem('token');
+      if (!token) {
+            throw new Error("Registration succeeded but no token was found.");
+        }
+      const decoded = jwtDecode(token);
+      
+      if (decoded.user.role === 'clinician') {
+        navigate('/clinician/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+
     } catch (err) {
       const errorMsg = err.response?.data?.errors?.[0]?.msg || err.response?.data?.msg || 'Registration failed. Please try again.';
       setError(errorMsg);
     } finally {
-      setIsLoading(false); // Stop loading regardless of outcome
+      setIsLoading(false);
     }
   };
 
   return (
     <PageContainer>
       <VisualPanel>
-        <h1>Join Nuclecare.</h1>
-        <p>Your journey to proactive, intelligent healthcare starts here.</p>
+        <LogoImage src="/myeasypharma-logo.svg" alt="Myeasypharma Pvt Ltd Logo" />
+        <BrandTitle>Myeasypharma Pvt Ltd</BrandTitle>
+        <BrandSlogan>Your journey to proactive, intelligent healthcare starts with a trusted partner.</BrandSlogan>
       </VisualPanel>
       <FormPanel>
         <FormBox>
@@ -218,6 +262,29 @@ const RegisterPage = () => {
               <StyledInput type="password" name="password" placeholder="Password" value={formData.password} onChange={onChange} required disabled={isLoading} />
             </InputWrapper>
             
+            <InputWrapper>
+              <Icon><FaUserMd /></Icon>
+              <StyledSelect name="role" value={formData.role} onChange={onChange} disabled={isLoading}>
+                <option value="patient">I am a Patient</option>
+                <option value="clinician">I am a Clinician</option>
+              </StyledSelect>
+            </InputWrapper>
+            {/* This field only appears if the selected role is 'patient' */}
+                        {formData.role === 'patient' && (
+                            <InputWrapper>
+                                <Icon><FaStethoscope /></Icon>
+                                <StyledInput 
+                                    type="text" 
+                                    name="clinicianCode"
+                                    placeholder="Enter Your Clinician's Code"
+                                    value={formData.clinicianCode}
+                                    onChange={onChange}
+                                    required 
+                                    disabled={isLoading} 
+                                />
+                            </InputWrapper>
+                        )}
+
             <SubmitButton type="submit" disabled={isLoading}>
               {isLoading ? <Spinner /> : 'Register'}
             </SubmitButton>

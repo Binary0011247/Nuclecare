@@ -23,7 +23,8 @@ app.use(express.json());
 // API Routes
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/patient', require('./src/routes/patientData'));
-
+app.use('/api/medications', require('./src/routes/medications'));
+app.use('/api/clinician', require('./src/routes/clinician'));
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));

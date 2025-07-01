@@ -1,12 +1,23 @@
-// frontend/src/components/HealthAura.jsx
 import React, { useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { BsFillHeartPulseFill } from 'react-icons/bs'; // Using the correct medical heart icon
 
-const pulse = keyframes`
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 10px 20px rgba(0, 0, 0, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+// --- Keyframes for Animations ---
+
+const pump = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); } /* A subtle pump effect */
+  100% { transform: scale(1); }
 `;
+
+const glow = (color) => keyframes`
+  0% { filter: drop-shadow(0 0 4px ${color}); }
+  50% { filter: drop-shadow(0 0 16px ${color}); }
+  100% { filter: drop-shadow(0 0 4px ${color}); }
+`;
+
+
+// --- Styled Components ---
 
 const AuraContainer = styled.div`
   display: flex;
@@ -14,42 +25,57 @@ const AuraContainer = styled.div`
   align-items: center;
   justify-content: center;
   margin: 20px auto;
+  min-height: 250px; /* Provides consistent spacing */
 `;
 
-const AuraOrb = styled.div`
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle, ${props => props.color1}, ${props => props.color2});
-  animation: ${pulse} ${props => props.speed}s infinite;
-  box-shadow: 0 0 50px ${props => props.color1};
-  transition: all 1.5s ease;
-  cursor: pointer;
+const HeartIconWrapper = styled.div`
+  /* Dynamically set the color and animation speed based on props */
+  color: ${props => props.color};
+  animation: 
+    ${props => pump} ${props => props.speed}s ease-in-out infinite,
+    ${props => glow(props.color)} ${props => props.speed * 2}s linear infinite;
+  
+  transition: color 1.5s ease; /* Smooth transition when the color changes */
 `;
 
 const InsightText = styled.p`
-    margin-top: 20px;
-    font-style: italic;
-    color: #eee;
-    max-width: 300px;
-    text-align: center;
+  margin-top: 30px;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: #bdc3c7; /* A light, readable grey */
+  max-width: 400px;
+  text-align: center;
 `;
 
-const HealthAura = ({ healthScore = 95, insight = "Loading..." }) => {
+// --- The React Component ---
+
+const HealthAura = ({ healthScore, insight }) => {
+  // Memoize the style calculation to prevent re-calculating on every render
   const auraStyle = useMemo(() => {
-    if (healthScore > 85) {
-      return { color1: '#FFD700', color2: '#FFA500', speed: 4 };
-    } else if (healthScore > 60) {
-      return { color1: '#87CEEB', color2: '#4682B4', speed: 2.5 };
+    // Default to a healthy state if no score is provided yet
+    const score = healthScore ?? 95;
+
+    if (score > 85) {
+      // Healthy State: A clinical, reassuring green
+      return { color: '#2ecc71', speed: 1.8}
+    } else if (score > 60) {
+      // Watchful State: A standard warning yellow/amber
+      return { color: '#f1c40f', speed: 1.2 }; 
     } else {
-      return { color1: '#DDA0DD', color2: '#BA55D3', speed: 1.5 };
+      // Concern State: An urgent, clinical red
+      return { color: '#e74c3c', speed: 0.8 }; 
     }
   }, [healthScore]);
 
   return (
     <AuraContainer>
-      <AuraOrb {...auraStyle} />
-      <InsightText>{insight}</InsightText>
+      <HeartIconWrapper color={auraStyle.color} speed={auraStyle.speed}>
+        {/* Render the medical heart icon with a large size */}
+        <BsFillHeartPulseFill size={140} />
+      </HeartIconWrapper>
+      <InsightText>
+        {insight || "Your health summary will appear here."}
+      </InsightText>
     </AuraContainer>
   );
 };
