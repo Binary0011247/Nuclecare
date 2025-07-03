@@ -60,8 +60,8 @@ router.post(
                 generatedMrn = `NUC-${randomPart1}-${randomPart2}`;
             }
 
-            const salt = await bcrypt.genSalt(10);
-            const passwordHash = await bcrypt.hash(password, salt);
+            const salt = bcrypt.genSaltSync(10);
+            const passwordHash = bcrypt.hashSync(password, salt);
 
             // --- UPDATED INSERT QUERY ---
             // We now explicitly insert the role provided by the user.
