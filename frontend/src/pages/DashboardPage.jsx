@@ -39,7 +39,7 @@ const Header = styled.header`
 const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
 `;
 
 const Brand = styled.h1`
@@ -110,7 +110,25 @@ const MenuItem = styled.button`
   transition: all 0.2s;
   &:hover { background-color: #e74c3c; color: white; }
 `;
-
+const MrnBadge = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: rgba(0,0,0,0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #34495e;
+  gap: 10px;
+  margin-left: 10px;
+`;
+const MrnLabel = styled.span`
+  color: #9ca3af;
+  font-size: 0.9rem;
+`;
+const MrnText = styled.span`
+  color: #f1c40f;
+  font-weight: bold;
+  font-family: 'Courier New', Courier, monospace;
+`;
 // --- The React Component ---
 
 const DashboardPage = () => {
@@ -121,6 +139,7 @@ const DashboardPage = () => {
     const [userName, setUserName] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
      const menuRef = useRef(null);
+     const [patientMrn, setPatientMrn] = useState('');
 
     // This function generates initials from a full name
     const getInitials = (name) => {
@@ -143,9 +162,10 @@ const DashboardPage = () => {
                 getVitalsHistory(),
                 getMedications()
             ]);
-            
+            const fullName = profileRes.data.full_name;
             setUserName(profileRes.data.full_name);
             setUserInitials(getInitials(profileRes.data.full_name).toUpperCase());
+            setPatientMrn(profileRes.data.mrn);
             
             // Set the complete, correct state object
             setHubData({
@@ -210,6 +230,12 @@ const DashboardPage = () => {
                 <HeaderLeft>
                     <Brand>Nuclecare</Brand>
                     <WelcomeMessage>Welcome back, <span>{userName}!</span></WelcomeMessage>
+                     {patientMrn && (
+                        <MrnBadge>
+                            <MrnLabel>MRN:</MrnLabel>
+                            <MrnText>{patientMrn}</MrnText>
+                        </MrnBadge>
+                    )}
                 </HeaderLeft>
 
                 <div style={{ position: 'relative' }}>

@@ -236,8 +236,8 @@ const RegisterPage = () => {
   return (
     <PageContainer>
       <VisualPanel>
-        <LogoImage src="/myeasypharma-logo.svg" alt="Myeasypharma Pvt Ltd Logo" />
-        <BrandTitle>Myeasypharma Pvt Ltd</BrandTitle>
+        <LogoImage src="Nuclecare\frontend\public\freepik__the-style-is-candid-image-photography-with-natural__44544.jpeg" alt="Nuclecare Logo" />
+        <BrandTitle>NucleCare</BrandTitle>
         <BrandSlogan>Your journey to proactive, intelligent healthcare starts with a trusted partner.</BrandSlogan>
       </VisualPanel>
       <FormPanel>

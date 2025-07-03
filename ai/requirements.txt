@@ -1,4 +1,8 @@
-# nuclecare/ai/requirements.txt (Updated)
+# ai/requirements.txt
 Flask
 Flask-Cors
 numpy
+psycopg2-binary
+scikit-learn
+pandas
+spacy

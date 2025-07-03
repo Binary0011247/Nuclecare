@@ -44,26 +44,69 @@ router.get('/vitals-history', async (req, res) => {
 // POST /api/patient/pulse-check
 // Now saves vitals for the LOGGED-IN user
 router.post('/pulse-check', async (req, res) => {
-    const { mood, systolic, diastolic, symptoms, heart_rate, sp_o2, weight } = req.body;
-    const userId = req.user.id; // <-- Use ID from the authenticated token
+    // --- THIS IS THE ROBUST DATA CLEANING AND TYPE CONVERSION LOGIC ---
+    
+    // Helper function to safely convert a value to an integer, defaulting to null if empty/invalid
+    const toInt = (val) => {
+        const parsed = parseInt(val, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+    // Helper function to safely convert a value to a float (for weight)
+    const toFloat = (val) => {
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? null : parsed;
+    };
 
+    const formData = req.body;
+    const userId = req.user.id;
+
+    // Create a clean, correctly-typed data object
+    const cleanedData = {
+        mood: toInt(formData.mood),
+        systolic: toInt(formData.systolic),
+        diastolic: toInt(formData.diastolic),
+        symptoms: formData.symptoms || '', // Default to empty string
+        heart_rate: toInt(formData.heart_rate),
+        sp_o2: toInt(formData.sp_o2),
+        weight: toFloat(formData.weight)
+    };
+    
     try {
-        const aiResponse = await axios.post('http://localhost:5001/api/calculate', {
-            mood, systolic, diastolic, symptoms
-        });
-        const { healthScore, insight } = aiResponse.data;
+        const dataForAI = { ...cleanedData, userId: userId };
+        
+        console.log("Sending cleaned data to AI:", dataForAI); // Log the cleaned data
 
-       const query = `
-    INSERT INTO patients_vitals (user_id, mood, systolic, diastolic, symptoms_text, health_score, insight_text, heart_rate, sp_o2, weight)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    RETURNING *;
+        const aiResponse = await axios.post('http://localhost:5001/api/calculate', dataForAI);
+        
+        const { healthScore, insight, symptomTags } = aiResponse.data;
+
+        const query = `
+            INSERT INTO patients_vitals (user_id, mood, systolic, diastolic, symptoms_text, health_score, insight_text, heart_rate, sp_o2, weight, symptom_tags)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            RETURNING *;
         `;
-        const values = [userId, mood, systolic, diastolic, symptoms, healthScore, insight, heart_rate, sp_o2, weight];
+        const values = [
+            userId, cleanedData.mood, cleanedData.systolic, cleanedData.diastolic, 
+            cleanedData.symptoms, healthScore, insight, cleanedData.heart_rate, 
+            cleanedData.sp_o2, cleanedData.weight, JSON.stringify(symptomTags)
+        ];
         
         const { rows } = await db.query(query, values);
+
+        // Trigger baseline update in the background
+        axios.post('http://localhost:5001/api/update-baseline', { userId: userId })
+             .catch(err => console.error("Non-blocking error during baseline update:", err.message));
+        
         res.status(201).json(rows[0]);
+
     } catch (err) {
-        console.error('Error in pulse-check:', err.message);
+        console.error('Error in /pulse-check route. This might be from the AI service.');
+        if (err.response) {
+            console.error('AI Service Response Data:', err.response.data);
+            console.error('AI Service Response Status:', err.response.status);
+        } else {
+            console.error('Error:', err.message);
+        }
         res.status(500).send('Server Error');
     }
 });

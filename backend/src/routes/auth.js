@@ -160,7 +160,7 @@ router.post(
 router.get('/me', authMiddleware, async (req, res) => {
     try {
         const user = await db.query(
-            "SELECT id, full_name, email, role, clinician_code FROM users WHERE id = $1", 
+            "SELECT id, full_name, email, role, clinician_code,mrn FROM users WHERE id = $1", 
             [req.user.id]
         );
 
