@@ -1,7 +1,9 @@
 import axios from 'axios';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const API_URL = 'http://localhost:5000/api/clinician';
-const API_URL_AUTH = 'http://localhost:5000/api/auth'; 
+
+const API_URL = `${API_BASE_URL}/api/clinician`;
+const API_URL_AUTH = `${API_BASE_URL}/api/auth`;
 
 // Fetches the data needed to draw the constellation of all patients
 export const getConstellationData = () => {

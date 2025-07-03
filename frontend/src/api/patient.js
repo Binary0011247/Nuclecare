@@ -1,13 +1,14 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // The base URL for all routes specific to patient data
-const API_URL_PATIENT = 'http://localhost:5000/api/patient';
+const API_URL_PATIENT = `${API_BASE_URL}/api/patient`;
 
 // The base URL for authentication-related routes
-const API_URL_AUTH = 'http://localhost:5000/api/auth';
+const API_URL_AUTH =  `${API_BASE_URL}/api/auth`;
 
 // The base URL for patient-facing medication routes
-const API_URL_MEDS = 'http://localhost:5000/api/medications';
+const API_URL_MEDS =  `${API_BASE_URL}/api/medications`;
 
 /**
  * Fetches the most recent vital sign record for the logged-in patient.

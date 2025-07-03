@@ -2,6 +2,9 @@ import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 export const AuthContext = createContext(null);
 
 const setAuthToken = token => {
@@ -44,14 +47,14 @@ export const AuthProvider = ({ children }) => {
     }, [token]);
 
     const login = async (email, password) => {
-        const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+        const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
         localStorage.setItem('token', res.data.token);
         setToken(res.data.token);
         return res; // Return the response for the page to use
     };
 
     const register = async (formData) => {
-        const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+        const res = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
         localStorage.setItem('token', res.data.token);
         setToken(res.data.token);
         return res; // Return the response
