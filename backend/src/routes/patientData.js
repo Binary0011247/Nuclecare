@@ -81,7 +81,7 @@ router.post('/pulse-check', async (req, res) => {
         // This log will now show the cleaned data with nulls instead of empty strings
         console.log("Sending cleaned data to AI:", dataForAI);
 
-        const aiResponse = await axios.post('http://localhost:5001/api/calculate', dataForAI);
+        const aiResponse = await axios.post('${process.env.AI_SERVICE_URL}/api/calculate', dataForAI);
         
         const { healthScore, insight, symptomTags } = aiResponse.data;
 
@@ -100,7 +100,7 @@ router.post('/pulse-check', async (req, res) => {
         const { rows } = await db.query(query, values);
 
         // Trigger baseline update in the background (fire-and-forget)
-        axios.post('http://localhost:5001/api/update-baseline', { userId: userId })
+        axios.post('${process.env.AI_SERVICE_URL}/api/update-baseline', { userId: userId })
              .catch(err => console.error("Non-blocking error during baseline update:", err.message));
         
         res.status(201).json(rows[0]);

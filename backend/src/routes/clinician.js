@@ -14,7 +14,7 @@ router.post('/patient/:id/generate-synopsis', [authMiddleware, checkRole('clinic
 
     try {
         // Call the AI service
-        const aiResponse = await axios.post('http://localhost:5001/api/generate-synopsis', { patientId });
+        const aiResponse = await axios.post('${process.env.AI_SERVICE_URL}/api/generate-synopsis', { patientId });
         const synopsis = aiResponse.data;
 
         // Save the generated report to our database
