@@ -43,16 +43,20 @@ router.get('/vitals-history', async (req, res) => {
 
 // POST /api/patient/pulse-check
 // Now saves vitals for the LOGGED-IN user
+
+// POST /api/patient/pulse-check
 router.post('/pulse-check', async (req, res) => {
     // --- THIS IS THE ROBUST DATA CLEANING AND TYPE CONVERSION LOGIC ---
     
     // Helper function to safely convert a value to an integer, defaulting to null if empty/invalid
     const toInt = (val) => {
+        if (val === null || val === undefined || val === '') return null;
         const parsed = parseInt(val, 10);
         return isNaN(parsed) ? null : parsed;
     };
     // Helper function to safely convert a value to a float (for weight)
     const toFloat = (val) => {
+        if (val === null || val === undefined || val === '') return null;
         const parsed = parseFloat(val);
         return isNaN(parsed) ? null : parsed;
     };
@@ -60,12 +64,12 @@ router.post('/pulse-check', async (req, res) => {
     const formData = req.body;
     const userId = req.user.id;
 
-    // Create a clean, correctly-typed data object
+    // Create a clean, correctly-typed data object before sending to AI or DB
     const cleanedData = {
         mood: toInt(formData.mood),
         systolic: toInt(formData.systolic),
         diastolic: toInt(formData.diastolic),
-        symptoms: formData.symptoms || '', // Default to empty string
+        symptoms: formData.symptoms || null, // Default to null if empty
         heart_rate: toInt(formData.heart_rate),
         sp_o2: toInt(formData.sp_o2),
         weight: toFloat(formData.weight)
@@ -74,7 +78,8 @@ router.post('/pulse-check', async (req, res) => {
     try {
         const dataForAI = { ...cleanedData, userId: userId };
         
-        console.log("Sending cleaned data to AI:", dataForAI); // Log the cleaned data
+        // This log will now show the cleaned data with nulls instead of empty strings
+        console.log("Sending cleaned data to AI:", dataForAI);
 
         const aiResponse = await axios.post('http://localhost:5001/api/calculate', dataForAI);
         
@@ -85,6 +90,7 @@ router.post('/pulse-check', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING *;
         `;
+        // Pass the cleaned data to the database. PostgreSQL will correctly handle 'null'.
         const values = [
             userId, cleanedData.mood, cleanedData.systolic, cleanedData.diastolic, 
             cleanedData.symptoms, healthScore, insight, cleanedData.heart_rate, 
@@ -93,15 +99,17 @@ router.post('/pulse-check', async (req, res) => {
         
         const { rows } = await db.query(query, values);
 
-        // Trigger baseline update in the background
+        // Trigger baseline update in the background (fire-and-forget)
         axios.post('http://localhost:5001/api/update-baseline', { userId: userId })
              .catch(err => console.error("Non-blocking error during baseline update:", err.message));
         
         res.status(201).json(rows[0]);
 
     } catch (err) {
+        // More descriptive logging
         console.error('Error in /pulse-check route. This might be from the AI service.');
         if (err.response) {
+            // This will log the detailed HTML error page from the AI service if it crashes
             console.error('AI Service Response Data:', err.response.data);
             console.error('AI Service Response Status:', err.response.status);
         } else {
@@ -109,6 +117,8 @@ router.post('/pulse-check', async (req, res) => {
         }
         res.status(500).send('Server Error');
     }
-});
+});    
+        
+
 
 module.exports = router;

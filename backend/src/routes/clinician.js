@@ -5,6 +5,52 @@ const router = express.Router();
 const db = require('../db');
 const authMiddleware = require('../middleware/authMiddleware');
 const checkRole = require('../middleware/checkRole');
+const axios = require('axios'); 
+
+
+router.post('/patient/:id/generate-synopsis', [authMiddleware, checkRole('clinician')], async (req, res) => {
+    const patientId = req.params.id;
+    const clinicianId = req.user.id;
+
+    try {
+        // Call the AI service
+        const aiResponse = await axios.post('http://localhost:5001/api/generate-synopsis', { patientId });
+        const synopsis = aiResponse.data;
+
+        // Save the generated report to our database
+        const query = `
+            INSERT INTO ai_health_synopsis 
+                (patient_id, clinician_id, headline, conclusion_class, confidence_score, key_findings, recommendation)
+            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *
+        `;
+        const values = [
+            patientId, clinicianId, synopsis.headline, synopsis.conclusion_class,
+            synopsis.confidence_score, JSON.stringify(synopsis.key_findings), synopsis.recommendation
+        ];
+        
+        const { rows } = await db.query(query, values);
+        res.status(201).json(rows[0]);
+    } catch (err) {
+        console.error("Synopsis generation failed:", err.response ? err.response.data : err.message);
+        res.status(500).send("Failed to generate AI synopsis.");
+    }
+});
+
+// @route   GET /api/clinician/patient/:id/synopsis-history
+// @desc    Get all past synopsis reports for a patient
+// @access  Private (Clinician only)
+router.get('/patient/:id/synopsis-history', [authMiddleware, checkRole('clinician')], async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            "SELECT * FROM ai_health_synopsis WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 5",
+            [req.params.id]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 // @route   GET /api/clinician/constellation-data
 // @desc    Get data for all patients to display in the Care Constellation.

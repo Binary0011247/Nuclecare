@@ -20,3 +20,10 @@ export const addMedicationForPatient = (patientId, medicationData) => {
 export const getMyClinicianProfile = () => {
     return axios.get(`${API_URL_AUTH}/me`);
 };
+export const generateSynopsis = (patientId) => {
+    return axios.post(`${API_URL}/patient/${patientId}/generate-synopsis`);
+};
+
+export const getSynopsisHistory = (patientId) => {
+    return axios.get(`${API_URL}/patient/${patientId}/synopsis-history`);
+};
