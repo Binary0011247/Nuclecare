@@ -205,6 +205,10 @@ def generate_synopsis():
         "recommendation": "Clinician to review patient data and trends for appropriate action."
     }
     return jsonify(synopsis)
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """A simple endpoint for uptime monitors to hit."""
+    return jsonify({"status": "ok"}), 200
 
 if __name__ == '__main__':
      port = int(os.environ.get('PORT', 5001))
