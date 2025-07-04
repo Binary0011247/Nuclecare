@@ -82,7 +82,7 @@ router.post('/pulse-check', async (req, res) => {
         console.log("Sending cleaned data to AI:", dataForAI);
 
         const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001'; // Fallback for local dev
-        const aiResponse = await axios.post(`${aiServiceUrl}/api/calculate`, dataForAI,{ timeout: 45000 });
+        const aiResponse = await axios.post(`${aiServiceUrl}/api/calculate`, dataForAI,{ timeout: 50000 });
         
         const { healthScore, insight, symptomTags } = aiResponse.data;
 
@@ -102,7 +102,7 @@ router.post('/pulse-check', async (req, res) => {
 
         // Trigger baseline update in the background (fire-and-forget)
 
-        axios.post(`${aiServiceUrl}/api/update-baseline`, { userId: userId },{ timeout: 45000 })
+        axios.post(`${aiServiceUrl}/api/update-baseline`, { userId: userId },{ timeout: 50000 })
              .catch(err => console.error("Non-blocking error during baseline update:", err.message));
         
         res.status(201).json(rows[0]);
