@@ -148,7 +148,7 @@ def generate_synopsis():
 
     patient_id = request.json['patientId']
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor) # Using DictCursor here for easier access
+    cur = conn.cursor()
     cur.execute("SELECT systolic, diastolic, heart_rate, symptoms_text, created_at FROM patients_vitals WHERE user_id = %s ORDER BY created_at DESC LIMIT 7", (patient_id,))
     history = cur.fetchall()
     cur.close(), conn.close()
@@ -156,7 +156,7 @@ def generate_synopsis():
     if len(history) < 3:
         return jsonify({"headline": "Not enough recent data for a full synopsis.", "key_findings": ["Patient has logged vitals less than 3 times in the last week."], "recommendation": "Encourage more frequent logging to enable AI analysis."})
 
-    df = pd.DataFrame(history, columns=[desc[0] for desc in cur.description])
+    df = pd.DataFrame(history, columns=['systolic', 'diastolic', 'heart_rate', 'symptoms_text', 'created_at'])
     df = df.sort_values(by='created_at', ascending=True).reset_index(drop=True)
 
     df['has_symptoms'] = df['symptoms_text'].notna().astype(int)
