@@ -13,7 +13,9 @@ app = Flask(__name__)
 CORS(app) # Allow all routes from all origins
 
 # Database Connection
-DB_URL = os.environ.get("DB_URL", "postgresql://postgres.qvohdszcnqeobrntkdbv:Database%401234%24@aws-0-ap-south-1.pooler.supabase.com:6543/postgres")
+BASE_DB_URL = os.environ.get("DB_URL", "postgresql://postgres.qvohdszcnqeobrntkdbv:Database%401234%24@aws-0-ap-south-1.pooler.supabase.com:6543/postgres")
+DB_URL = f"{BASE_DB_URL}?sslmode=require"
+
 
 def get_db_connection():
     return psycopg2.connect(DB_URL)
