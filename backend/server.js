@@ -22,6 +22,12 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+app.use((req, _res, next) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] Received a ${req.method} request for ${req.originalUrl}`);
+  next(); // This is crucial - it passes control to the next handler (your API routes)
+});
+
 app.get('/health', (_req, res) => {
   res.status(200).send('OK');
 });
