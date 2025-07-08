@@ -22,6 +22,10 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+app.get('/health', (_req, res) => {
+  res.status(200).send('OK');
+});
+
 // API Routes
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/patient', require('./src/routes/patientData'));
