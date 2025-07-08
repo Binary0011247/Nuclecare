@@ -23,8 +23,8 @@ const corsOptions = {
     return callback(null, true);
   }, // Allow all origins for development
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  credentials: true,
+  
 };
 
 app.use(cors(corsOptions));
