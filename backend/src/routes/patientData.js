@@ -28,10 +28,9 @@ router.get('/latest-vitals', async (req, res) => {
 router.get('/vitals-history', async (req, res) => {
     try {
         const { rows } = await db.query(
-            `SELECT systolic, diastolic, heart_rate, sp_o2, weight, created_at 
-             FROM patients_vitals 
+            `SELECT systolic, diastolic, heart_rate, sp_o2, weight, created_at ,blood_glucose             FROM patients_vitals 
              WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '30 days'
-             ORDER BY created_at ASC`,
+             ORDER BY created_at DESC`,
             [req.user.id]
         );
         res.json(rows);
