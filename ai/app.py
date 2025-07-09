@@ -171,7 +171,7 @@ def update_baseline():
         ON CONFLICT (user_id) DO UPDATE SET
             avg_systolic = EXCLUDED.avg_systolic, stddev_systolic = EXCLUDED.stddev_systolic, avg_diastolic = EXCLUDED.avg_diastolic, 
             stddev_diastolic = EXCLUDED.stddev_diastolic, avg_heart_rate = EXCLUDED.avg_heart_rate, stddev_heart_rate = EXCLUDED.stddev_heart_rate, avg_blood_glucose = EXCLUDED.avg_blood_glucose, stddev_blood_glucose = EXCLUDED.stddev_blood_glucose,last_updated = NOW();
-        """,(user_id, baseline_python['avg_systolic'], baseline_python['stddev_systolic'], baseline_python['avg_diastolic'], baseline_python['stddev_diastolic'], baseline_python['avg_heart_rate'], baseline_python['stddev_heart_rate'],baseline_python.get['avg_blood_glucose'], baseline_python.get['stddev_blood_glucose']))
+        """,(user_id, baseline_python('avg_systolic'), baseline_python('stddev_systolic'), baseline_python('avg_diastolic'), baseline_python('stddev_diastolic'), baseline_python('avg_heart_rate'), baseline_python('stddev_heart_rate'),baseline_python.get('avg_blood_glucose'), baseline_python.get('stddev_blood_glucose')))
     
     conn.commit()
     cur.close(), conn.close()
