@@ -28,8 +28,8 @@ def get_ml_model():
     if ml_model is None:
         try:
             print("--- LAZY LOADING: AI Synopsis model ---")
-            ml_model = joblib.load('health_synopsis_model.pkl')
-            model_features = joblib.load('model_features.pkl')
+            ml_model = joblib.load('health_synopsis_model_v2.pkl')
+            model_features = joblib.load('model_features_v2.pkl')
             print("✅ AI Synopsis model loaded successfully.")
         except Exception as e:
             print(f"FATAL: Could not load AI synopsis model. Error: {e}")
@@ -100,6 +100,14 @@ def calculate():
     if baseline_row and baseline_row[0] is not None and baseline_row[1] is not None:
         baseline = {'avg_systolic': baseline_row[0], 'stddev_systolic': baseline_row[1]}
 
+    glucose = data.get('blood_glucose')
+    if glucose:
+        if glucose > 180: # Hyperglycemia risk
+            risk_score += 30
+            insights.append(f"Blood glucose ({glucose} mg/dL) is high.")
+        elif glucose < 70: # Hypoglycemia risk
+            risk_score += 40
+            insights.append(f"WARNING: Blood glucose ({glucose} mg/dL) is low.")
     systolic = data.get('systolic')
     if systolic and baseline.get('stddev_systolic', 0) > 0:
         z_score = abs(systolic - baseline['avg_systolic']) / baseline['stddev_systolic']
@@ -147,7 +155,7 @@ def update_baseline():
     user_id = request.json['userId']
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT systolic, diastolic, heart_rate FROM patients_vitals WHERE user_id = %s AND created_at >= NOW() - INTERVAL '30 days'", (user_id,))
+    cur.execute("SELECT systolic, diastolic, heart_rate,blood_glucose FROM patients_vitals WHERE user_id = %s AND created_at >= NOW() - INTERVAL '30 days'", (user_id,))
     vitals = cur.fetchall()
     
     if len(vitals) < 5:
@@ -155,7 +163,7 @@ def update_baseline():
         return jsonify({"status": "not enough data"}), 200
 
     df = pd.DataFrame(vitals, columns=['systolic', 'diastolic', 'heart_rate'])
-    baseline_numpy = {"avg_systolic": df['systolic'].mean(), "stddev_systolic": df['systolic'].std(), "avg_diastolic": df['diastolic'].mean(), "stddev_diastolic": df['diastolic'].std(), "avg_heart_rate": df['heart_rate'].mean(), "stddev_heart_rate": df['heart_rate'].std()}
+    baseline_numpy = {"avg_systolic": df['systolic'].mean(), "stddev_systolic": df['systolic'].std(), "avg_diastolic": df['diastolic'].mean(), "stddev_diastolic": df['diastolic'].std(), "avg_heart_rate": df['heart_rate'].mean(), "stddev_heart_rate": df['heart_rate'].std(),"avg_blood_glucose": df['blood_glucose'].mean(), "stddev_blood_glucose": df['blood_glucose'].std()}
     baseline_python = {key: float(value) if pd.notna(value) else None for key, value in baseline_numpy.items()}
     
     cur.execute("""
@@ -179,7 +187,7 @@ def generate_synopsis():
     patient_id = request.json['patientId']
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT systolic, diastolic, heart_rate, symptoms_text, created_at FROM patients_vitals WHERE user_id = %s ORDER BY created_at DESC LIMIT 7", (patient_id,))
+    cur.execute("SELECT systolic, diastolic, heart_rate, symptoms_text, created_at , blood_glucose FROM patients_vitals WHERE user_id = %s ORDER BY created_at DESC LIMIT 7", (patient_id,))
     history = cur.fetchall()
     cur.close(), conn.close()
 
@@ -192,6 +200,8 @@ def generate_synopsis():
     df['has_symptoms'] = df['symptoms_text'].notna().astype(int)
     df['bp_mean_3d'] = df['systolic'].rolling(3, min_periods=1).mean()
     df['hr_mean_3d'] = df['heart_rate'].rolling(3, min_periods=1).mean()
+    df['blood_glucose'] = df['blood_glucose'].fillna(100)
+    df['glucose_mean_3d'] = df['blood_glucose'].rolling(3, min_periods=1).mean()
     
     latest_data_for_prediction = df.iloc[-1:][features]
     prediction = model.predict(latest_data_for_prediction)[0]
@@ -201,7 +211,7 @@ def generate_synopsis():
     synopsis = {
         "headline": f"AI analysis suggests patient's current state aligns with '{prediction}'.",
         "conclusion_class": prediction, "confidence_score": float(confidence),
-        "key_findings": [ f"Most recent Systolic BP: {int(df.iloc[-1]['systolic'])} mmHg.", f"3-Day Average BP is approx. {int(df.iloc[-1]['bp_mean_3d'])} mmHg.", "Recent symptoms were reported." if int(df.iloc[-1]['has_symptoms']) else "No recent symptoms reported." ],
+        "key_findings": [ f"Most recent Systolic BP: {int(df.iloc[-1]['systolic'])} mmHg.", f"3-Day Average BP is approx. {int(df.iloc[-1]['bp_mean_3d'])} mmHg.",f"Most recent Blood Glucose: {int(df.iloc[-1]['blood_glucose'])} mg/dL.", "Recent symptoms were reported." if int(df.iloc[-1]['has_symptoms']) else "No recent symptoms reported." ],
         "recommendation": "Clinician to review patient data and trends for appropriate action."
     }
     return jsonify(synopsis)

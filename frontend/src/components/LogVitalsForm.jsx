@@ -46,6 +46,11 @@ const Input = styled.input`
     border-color: #61dafb;
   }
 `;
+const FocusInput = styled(Input)`
+  border-color: #3498db;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+`;
+
 
 const spin = keyframes` to { transform: rotate(360deg); } `;
 const Spinner = styled.div`
@@ -91,7 +96,8 @@ const LogVitalsForm = ({ onSubmit }) => {
         heart_rate: '',
         sp_o2: '',
         weight: '',
-        symptoms: ''
+        symptoms: '',
+        blood_glucose: ''
     });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -150,11 +156,17 @@ const LogVitalsForm = ({ onSubmit }) => {
                 <Label htmlFor="weight">Weight</Label>
                 <Input id="weight" type="number" step="0.1" name="weight" value={formData.weight} onChange={handleChange} placeholder="e.g., 150.5" />
             </FormGroup>
+            
+            <FormGroup>
+                <Label htmlFor="blood_glucose">Blood Glucose (mg/dL)</Label>
+                <FocusInput id="blood_glucose" type="number" name="blood_glucose" value={formData.blood_glucose} onChange={handleChange} placeholder="e.g., 110" />
+            </FormGroup>
 
             <FormGroup>
                 <Label htmlFor="symptoms">Any symptoms to report?</Label>
                 <Input id="symptoms" type="text" name="symptoms" value={formData.symptoms} onChange={handleChange} placeholder="e.g., mild headache" />
             </FormGroup>
+
 
             <SubmitButton type="submit" disabled={isLoading}>
                 {isLoading ? <Spinner /> : "Submit Today's Vitals"}

@@ -72,7 +72,8 @@ router.post('/pulse-check', async (req, res) => {
         symptoms: formData.symptoms || null, // Default to null if empty
         heart_rate: toInt(formData.heart_rate),
         sp_o2: toInt(formData.sp_o2),
-        weight: toFloat(formData.weight)
+        weight: toFloat(formData.weight),
+        blood_glucose: toInt(formData.blood_glucose)
     };
     
     try {
@@ -87,15 +88,15 @@ router.post('/pulse-check', async (req, res) => {
         const { healthScore, insight, symptomTags } = aiResponse.data;
 
         const query = `
-            INSERT INTO patients_vitals (user_id, mood, systolic, diastolic, symptoms_text, health_score, insight_text, heart_rate, sp_o2, weight, symptom_tags)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            INSERT INTO patients_vitals (user_id, mood, systolic, diastolic, symptoms_text, health_score, insight_text, heart_rate, sp_o2, weight, symptom_tags,blood_glucose)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,$12)
             RETURNING *;
         `;
         // Pass the cleaned data to the database. PostgreSQL will correctly handle 'null'.
         const values = [
             userId, cleanedData.mood, cleanedData.systolic, cleanedData.diastolic, 
             cleanedData.symptoms, healthScore, insight, cleanedData.heart_rate, 
-            cleanedData.sp_o2, cleanedData.weight, JSON.stringify(symptomTags)
+            cleanedData.sp_o2, cleanedData.weight, JSON.stringify(symptomTags),cleanedData.blood_glucose 
         ];
         
         const { rows } = await db.query(query, values);
