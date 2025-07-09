@@ -162,16 +162,16 @@ def update_baseline():
         cur.close(), conn.close()
         return jsonify({"status": "not enough data"}), 200
 
-    df = pd.DataFrame(vitals, columns=['systolic', 'diastolic', 'heart_rate'])
+    df = pd.DataFrame(vitals, columns=['systolic', 'diastolic', 'heart_rate','blood_glucose'])
     baseline_numpy = {"avg_systolic": df['systolic'].mean(), "stddev_systolic": df['systolic'].std(), "avg_diastolic": df['diastolic'].mean(), "stddev_diastolic": df['diastolic'].std(), "avg_heart_rate": df['heart_rate'].mean(), "stddev_heart_rate": df['heart_rate'].std(),"avg_blood_glucose": df['blood_glucose'].mean(), "stddev_blood_glucose": df['blood_glucose'].std()}
     baseline_python = {key: float(value) if pd.notna(value) else None for key, value in baseline_numpy.items()}
     
     cur.execute("""
-        INSERT INTO patient_baselines (user_id, avg_systolic, stddev_systolic, avg_diastolic, stddev_diastolic, avg_heart_rate, stddev_heart_rate) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO patient_baselines (user_id, avg_systolic, stddev_systolic, avg_diastolic, stddev_diastolic, avg_heart_rate, stddev_heart_rate, avg_blood_glucose, stddev_blood_glucose) VALUES (%s, %s, %s, %s, %s, %s, %s,%s,%s)
         ON CONFLICT (user_id) DO UPDATE SET
             avg_systolic = EXCLUDED.avg_systolic, stddev_systolic = EXCLUDED.stddev_systolic, avg_diastolic = EXCLUDED.avg_diastolic, 
-            stddev_diastolic = EXCLUDED.stddev_diastolic, avg_heart_rate = EXCLUDED.avg_heart_rate, stddev_heart_rate = EXCLUDED.stddev_heart_rate, last_updated = NOW();
-        """,(user_id, baseline_python['avg_systolic'], baseline_python['stddev_systolic'], baseline_python['avg_diastolic'], baseline_python['stddev_diastolic'], baseline_python['avg_heart_rate'], baseline_python['stddev_heart_rate']))
+            stddev_diastolic = EXCLUDED.stddev_diastolic, avg_heart_rate = EXCLUDED.avg_heart_rate, stddev_heart_rate = EXCLUDED.stddev_heart_rate, avg_blood_glucose = EXCLUDED.avg_blood_glucose, stddev_blood_glucose = EXCLUDED.stddev_blood_glucose,last_updated = NOW();
+        """,(user_id, baseline_python['avg_systolic'], baseline_python['stddev_systolic'], baseline_python['avg_diastolic'], baseline_python['stddev_diastolic'], baseline_python['avg_heart_rate'], baseline_python['stddev_heart_rate'],baseline_python.get['avg_blood_glucose'], baseline_python.get['stddev_blood_glucose']))
     
     conn.commit()
     cur.close(), conn.close()
