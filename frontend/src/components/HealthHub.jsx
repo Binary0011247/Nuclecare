@@ -2,10 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import HealthAura from './HealthAura.jsx';
 import VitalSignsChart from './VitalSignsChart.jsx';
+import BloodGlucoseChart from './BloodGlucoseChart.jsx';
 import MedicationTracker from './MedicationTracker.jsx';
 import LogVitalsForm from './LogVitalsForm.jsx';
 import Spinner from './layout/Spinner.jsx';
-import BloodGlucoseChart from './BloodGlucoseChart.jsx';
+
 
 // --- Styled Components ---
 const HubLayout = styled.div`
@@ -60,6 +61,7 @@ const HealthHub = ({ data, isLoading, onLogMedication, onLogVitals, showVitalsFo
                 {/* The chart component will now receive the correct history data */}
                 <VitalSignsChart data={[...vitalsHistory].reverse()} />
             </Card>
+            
              <Card>
                 <h3>Blood Glucose Trend</h3>
                 <BloodGlucoseChart data={[...vitalsHistory].reverse()} />
