@@ -194,7 +194,7 @@ def generate_synopsis():
     if len(history) < 3:
         return jsonify({"headline": "Not enough recent data for a full synopsis.", "key_findings": ["Patient has logged vitals less than 3 times in the last week."], "recommendation": "Encourage more frequent logging to enable AI analysis."})
 
-    df = pd.DataFrame(history, columns=['systolic', 'diastolic', 'heart_rate', 'symptoms_text', 'created_at'])
+    df = pd.DataFrame(history, columns=['systolic', 'diastolic', 'heart_rate', 'symptoms_text', 'created_at','blood_glucose'])
     df = df.sort_values(by='created_at', ascending=True).reset_index(drop=True)
 
     df['has_symptoms'] = df['symptoms_text'].notna().astype(int)
