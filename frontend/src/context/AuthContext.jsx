@@ -48,15 +48,17 @@ export const AuthProvider = ({ children }) => {
         
     const login = async (email, password) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+        const newToken = res.data.token;
         localStorage.setItem('token', res.data.token);
-        
-        setToken(res.data.token);
 
-         const decoded = jwtDecode(token);
+        
+        setAuthToken(newToken);
+
+        const decoded = jwtDecode(newToken);
         setUser(decoded.user);
         
         // Set the token state last to ensure other states are ready.
-        setToken(token);
+        setToken(newToken);
         
         // Return the decoded user so the login page knows the role.
         return decoded.user;// Return the response for the page to use
@@ -64,15 +66,21 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (formData) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
+        const newToken = res.data.token;
         localStorage.setItem('token', res.data.token);
         
-        setToken(res.data.token);
-        return res; // Return the response
+        setAuthToken(newToken);
+        const decoded = jwtDecode(newToken);
+        setUser(decoded.user);
+        setToken(newToken);
+        
+        return decoded.user;
     };
 
     const logout = () => {
         localStorage.removeItem('token');
         
+       setAuthToken(null);
         setToken(null);
         setUser(null);
     };
