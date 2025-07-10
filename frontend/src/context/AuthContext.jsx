@@ -22,29 +22,29 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const bootstrapAuth = () => {
-            if (token) {
-                setAuthToken(token);
+            const storedToken = localStorage.getItem('token');
+            if (storedToken) {
+                setAuthToken(storedToken);
                 try {
-                    const decoded = jwtDecode(token);
-                    // Check if token is expired
+                    const decoded = jwtDecode(storedToken);
                     if (decoded.exp * 1000 < Date.now()) {
-                        // Token is expired, log the user out
-                        logout();
+                        logout(); // Token expired
                     } else {
                         setUser(decoded.user);
+                        setToken(storedToken); // Set the token state *after* validation
                     }
                 } catch (error) {
-                    console.error("Invalid token found:", error);
-                    logout(); // If token is malformed, log out
+                    logout(); // Malformed token
                 }
             } else {
                 setUser(null);
             }
             setIsLoading(false);
         };
+        
 
         bootstrapAuth();
-    }, [token]);
+    }, []);
 
     const login = async (email, password) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });

@@ -3,9 +3,12 @@
 require('dotenv').config();
 
 const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
 const cors = require('cors');
 
 const app = express();
+const server = http.createServer(app);
 
 
 
@@ -19,6 +22,31 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 // --- END: NEW CORS CONFIGURATION ---
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Must also allow connections from your frontend domain
+    methods: ["GET", "POST"]
+  }
+});
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+io.on('connection', (socket) => {
+  console.log(`[Socket.IO] A user connected: ${socket.id}`);
+  
+  socket.on('join_patient_room', (patientId) => {
+    socket.join(patientId.toString());
+    console.log(`[Socket.IO] Socket ${socket.id} joined room for patient ${patientId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket.IO] User disconnected: ${socket.id}`);
+  });
+});
+
 
 app.use(express.json());
 
