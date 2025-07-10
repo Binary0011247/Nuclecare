@@ -65,7 +65,7 @@ const BloodGlucoseChart = ({ data }) => {
                             border: '1px solid #444', 
                             borderRadius: '8px' 
                         }}
-                        cursor={{fill: 'rgba(255, 255, 255, 0.1)'}}
+                        cursor={{fill: '#63a45b'}}
                     />
                     <Legend />
                     <Bar dataKey="blood_glucose" name="Blood Glucose" >
