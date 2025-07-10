@@ -28,27 +28,28 @@ export const AuthProvider = ({ children }) => {
                 try {
                     const decoded = jwtDecode(storedToken);
                     if (decoded.exp * 1000 < Date.now()) {
-                        logout(); // Token expired
+                        // Token is expired, so log out
+                        localStorage.removeItem('token');
+                        setAuthToken(null);
                     } else {
                         setUser(decoded.user);
-                        setToken(storedToken); // Set the token state *after* validation
+                        setToken(storedToken);
                     }
                 } catch (error) {
-                    logout(); // Malformed token
+                    // Malformed token
+                    localStorage.removeItem('token');
+                    setAuthToken(null);
                 }
-            } else {
-                setUser(null);
             }
             setIsLoading(false);
         };
-        
-
         bootstrapAuth();
     }, []);
-
+        
     const login = async (email, password) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
         localStorage.setItem('token', res.data.token);
+        setAuthToken(res.data.token);
         setToken(res.data.token);
         return res; // Return the response for the page to use
     };
@@ -56,12 +57,14 @@ export const AuthProvider = ({ children }) => {
     const register = async (formData) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
         localStorage.setItem('token', res.data.token);
+        setAuthToken(res.data.token);
         setToken(res.data.token);
         return res; // Return the response
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        setAuthToken(null);
         setToken(null);
         setUser(null);
     };

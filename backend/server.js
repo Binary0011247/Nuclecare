@@ -29,7 +29,7 @@ const io = new Server(server, {
   }
 });
 
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   req.io = io;
   next();
 });
@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
   });
 });
 
-
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 app.use((req, _res, next) => {
@@ -67,4 +67,6 @@ app.use('/api/medications', require('./src/routes/medications'));
 app.use('/api/clinician', require('./src/routes/clinician'));
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Backend server with WebSockets running on port ${PORT}`));
+
+module.exports.io = io;
