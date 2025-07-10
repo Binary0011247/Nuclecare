@@ -188,13 +188,13 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            await login(formData.email, formData.password);
+            const user = await login(formData.email, formData.password);
             
             // The token is now in localStorage. Decode it to find the user's role for navigation.
-            const token = localStorage.getItem('token');
-            const decoded = jwtDecode(token);
+            //const token = localStorage.getItem('token');
+            //const decoded = jwtDecode(token);
             
-            if (decoded.user.role === 'clinician') {
+            if (user.role === 'clinician') {
               navigate('/clinician/dashboard');
             } else {
               navigate('/dashboard');

@@ -51,7 +51,15 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', res.data.token);
         
         setToken(res.data.token);
-        return res; // Return the response for the page to use
+
+         const decoded = jwtDecode(token);
+        setUser(decoded.user);
+        
+        // Set the token state last to ensure other states are ready.
+        setToken(token);
+        
+        // Return the decoded user so the login page knows the role.
+        return decoded.user;// Return the response for the page to use
     };
 
     const register = async (formData) => {

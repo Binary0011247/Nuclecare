@@ -314,7 +314,7 @@ const PatientDetailPage = () => {
 
     const handleDischargePatient = async () => {
         // Double-check that the entered MRN matches the patient's MRN
-        if (confirmationMrn !== patientProfile.mrn) {
+        if (confirmationMrn !== patientData.profile.mrn) {
             alert("The MRN you entered does not match. Please check and try again.");
             return;
         }
