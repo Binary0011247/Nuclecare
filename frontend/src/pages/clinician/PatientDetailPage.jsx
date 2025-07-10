@@ -10,6 +10,8 @@ import HealthSynopsisReport from '../../components/clinician/Health-Synopsis-Rep
 import styled, { keyframes } from 'styled-components';
 import { FaArrowLeft, FaSignOutAlt, FaBrain } from 'react-icons/fa';
 import Modal from '../../components/layout/Modal.jsx';
+import { dischargePatient } from '../../api/clinician.js';
+import { FaExclamationTriangle } from 'react-icons/fa';
 
 // --- Styled Components for the new layout ---
 
@@ -135,7 +137,105 @@ const GenerateButton = styled.button`
   }
 `;
 
+export const DischargeButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  width: 100%;
+  
+  background-color: transparent;
+  color: #f87171; /* A warning red color */
+  border: 1px solid #7f1d1d; /* A dark red border */
+  
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 
+  &:hover:not(:disabled) {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const ModalTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #f87171; /* Red title for emphasis */
+  margin-top: 0;
+  margin-bottom: 20px;
+`;
+
+export const ModalText = styled.p`
+  color: #d1d5db;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  
+  strong {
+    color: white;
+    font-weight: bold;
+  }
+`;
+
+export const ModalInput = styled.input`
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #34495e;
+  background: #2c3e50;
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+  letter-spacing: 2px;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #f87171;
+  }
+`;
+
+export const ConfirmButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 15px;
+  width: 100%;
+  
+  background-color: #e74c3c; /* A strong red */
+  color: white;
+  border: none;
+  
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover:not(:disabled) {
+    background-color: #c0392b; /* A darker red on hover */
+  }
+
+  &:disabled {
+    background-color: #7f8c8d;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
 // --- The React Component ---
 
 const PatientDetailPage = () => {
@@ -148,6 +248,9 @@ const PatientDetailPage = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control the modal
     const [activeReport, setActiveReport] = useState(null); // State to hold the newly generated report
+    const [isDischargeModalOpen, setIsDischargeModalOpen] = useState(false);
+    const [confirmationMrn, setConfirmationMrn] = useState('');
+    const [isDischarging, setIsDischarging] = useState(false);
     
 
      const fetchData = async () => {
@@ -209,10 +312,32 @@ const PatientDetailPage = () => {
         return <div>Patient not found. <Link to="/clinician/dashboard">Go Back</Link></div>;
     }
 
+    const handleDischargePatient = async () => {
+        // Double-check that the entered MRN matches the patient's MRN
+        if (confirmationMrn !== patientProfile.mrn) {
+            alert("The MRN you entered does not match. Please check and try again.");
+            return;
+        }
+
+        setIsDischarging(true);
+        try {
+            await dischargePatient(patientId);
+            alert("Patient has been successfully discharged.");
+            navigate('/clinician/dashboard'); // Navigate back to the constellation
+        } catch (err) {
+            console.error("Failed to discharge patient:", err);
+            alert("An error occurred. Could not discharge the patient.");
+        } finally {
+            setIsDischarging(false);
+            setIsDischargeModalOpen(false);
+        }
+    };
+
     return (
       <>
         <PageLayout>
             <Sidebar>
+              
                
                 <PatientInfo>
                     <h2>{patientData.full_name}</h2>
@@ -227,6 +352,10 @@ const PatientDetailPage = () => {
                     </GenerateButton>
 
                 <SidebarActions>
+                   <DischargeButton onClick={() => setIsDischargeModalOpen(true)}>
+                            <FaExclamationTriangle />
+                            Discharge Patient
+                        </DischargeButton>
                     <NavButton to="/clinician/dashboard">
                         <FaArrowLeft />
                         Back to Constellation
@@ -251,9 +380,31 @@ const PatientDetailPage = () => {
                     <Spinner /> 
                 )}
             </Modal>
-        </>
-        
+
+             <Modal isOpen={isDischargeModalOpen} onClose={() => setIsDischargeModalOpen(false)}>
+            <ModalTitle><FaExclamationTriangle /> Confirm Discharge</ModalTitle>
+            <ModalText>
+                This will remove <strong>{patientData.profile.full_name}</strong> from your Care Constellation. You will no longer be responsible for their care through this platform. This action cannot be undone.
+            </ModalText>
+            <ModalText>
+                To confirm, please type the patient's MRN: <strong>{patientData.profile.mrn}</strong>
+            </ModalText>
+            <ModalInput 
+                type="text"
+                value={confirmationMrn}
+                onChange={(e) => setConfirmationMrn(e.target.value)}
+                placeholder="Type MRN to confirm"
+            />
+            <ConfirmButton 
+                onClick={handleDischargePatient} 
+                disabled={isDischarging || confirmationMrn !== patientData.profile.mrn}
+            >
+                {isDischarging ? 'Discharging...' : 'I understand, discharge this patient'}
+            </ConfirmButton>
+        </Modal>
+      </>   
     );
+
 };
 
 export default PatientDetailPage;

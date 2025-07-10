@@ -143,4 +143,34 @@ router.post(
     }
 );
 
+
+router.delete(
+    '/patient/:id/assignment',
+    [authMiddleware, checkRole('clinician')],
+    async (req, res) => {
+        const patientId = req.params.id;
+        const clinicianId = req.user.id;
+
+        try {
+            // The DELETE command removes the row from the assignment table.
+            const deleteResult = await db.query(
+                'DELETE FROM patient_clinician_assignments WHERE patient_id = $1 AND clinician_id = $2',
+                [patientId, clinicianId]
+            );
+
+            // Check if a row was actually deleted.
+            if (deleteResult.rowCount === 0) {
+                return res.status(404).json({ msg: 'Assignment not found. Patient may not be assigned to you.' });
+            }
+
+            // Send a success message.
+            res.json({ msg: 'Patient successfully discharged from your care.' });
+
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    }
+);
+
 module.exports = router;

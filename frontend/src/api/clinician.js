@@ -29,3 +29,7 @@ export const generateSynopsis = (patientId) => {
 export const getSynopsisHistory = (patientId) => {
     return axios.get(`${API_URL}/patient/${patientId}/synopsis-history`);
 };
+
+export const dischargePatient = (patientId) => {
+    return axios.delete(`${API_URL}/patient/${patientId}/assignment`);
+};
