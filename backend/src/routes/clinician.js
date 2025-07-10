@@ -135,6 +135,12 @@ router.post(
                 'INSERT INTO medications (user_id, name, dosage, frequency) VALUES ($1, $2, $3, $4) RETURNING *',
                 [patientId, name, dosage, frequency]
             );
+            const notificationPayload = {
+                title: "New Medication Prescribed",
+                message: `Your care team has prescribed a new medication: ${savedMed.name} (${savedMed.dosage}).`
+            };
+            req.io.to(patientId.toString()).emit('new_notification', notificationPayload);
+            console.log(`Emitted 'new_notification' to room ${patientId}`);
             res.status(201).json(newMed.rows[0]);
         } catch (err) {
             console.error(err.message);

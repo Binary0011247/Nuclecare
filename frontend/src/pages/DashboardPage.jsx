@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useContext,useRef } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
+import { SocketContext } from '../context/SocketContext.jsx';
 import { getLatestVitals, getVitalsHistory, getMedications, logMedicationTaken, submitPulseCheck, getMyProfile } from '../api/patient.js';
+import toast from 'react-hot-toast'; // Import the toast function
+import { jwtDecode } from 'jwt-decode';
 import styled, { keyframes } from 'styled-components';
 import HealthHub from '../components/HealthHub.jsx';
 import Spinner from '../components/layout/Spinner.jsx';
 import { FaSignOutAlt } from 'react-icons/fa';
+
+
 
 // --- Keyframes for Animations (for the new menu and pulsar) ---
 const pulseGlow = keyframes`
@@ -133,6 +138,7 @@ const MrnText = styled.span`
 
 const DashboardPage = () => {
     const { logout } = useContext(AuthContext);
+    const socket = useContext(SocketContext);
     const [hubData, setHubData] = useState({ latestVitals: null, history: [], medications: [] });
     const [isLoading, setIsLoading] = useState(true);
     const [userInitials, setUserInitials] = useState('');
@@ -185,6 +191,7 @@ const DashboardPage = () => {
 
     // This useEffect hook runs only ONCE when the component first loads
     useEffect(() => {
+        
         fetchDashboardData();
     }, []);
 
@@ -219,6 +226,42 @@ const DashboardPage = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [menuRef]);
+
+
+    useEffect(() => {
+        // Ensure we have a socket connection and a user token before proceeding
+        if (socket && token) {
+            // Decode the token to get the current user's ID
+            const decoded = jwtDecode(token);
+            const userId = decoded.user.id;
+
+            // Step 1: Tell the server to add this client to the patient's private room
+            socket.emit('join_patient_room', userId);
+            console.log(`Socket joining room for patient ID: ${userId}`);
+
+            // Step 2: Define the function that will run when a notification arrives
+            const handleNewNotification = (notification) => {
+                console.log("New notification received:", notification);
+                // Use react-hot-toast to display a success-style notification
+                toast.success(notification.message, {
+                    duration: 6000, // Keep it on screen a bit longer
+                });
+                // Refetch all dashboard data to show the new medication in the list
+                fetchDashboardData();
+            };
+
+            // Step 3: Attach the listener for the 'new_notification' event
+            socket.on('new_notification', handleNewNotification);
+
+            // Step 4: IMPORTANT - Cleanup function
+            // This runs when the component unmounts (e.g., user logs out or closes page)
+            // It removes the event listener to prevent memory leaks.
+            return () => {
+                console.log(`Socket leaving room for patient ID: ${userId}`);
+                socket.off('new_notification', handleNewNotification);
+            };
+        }
+    }, [socket, token]); // This effect will re-run if the socket connection or token changes
 
     if (isLoading) {
         return <Spinner />;

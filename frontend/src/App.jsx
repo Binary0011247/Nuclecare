@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 
 // Import the top-level provider for authentication
 import { AuthProvider } from './context/AuthContext.jsx';
+import { Toaster } from 'react-hot-toast';
 
 // Import all the page components
 import LoginPage from './pages/LoginPage.jsx';
@@ -17,11 +18,13 @@ import BrandingWatermark from './components/layout/BrandingWatermark.jsx';
 
 // Import global styles
 import './App.css';
+import { SocketProvider } from './context/SocketContext.jsx';
 
 function App() {
   return (
     // The AuthProvider wraps the entire application, making authentication
     // state (like token, user, isLoading) available to all child components.
+    <SocketProvider>
     <AuthProvider>
       <Router>
         <div className="App">
@@ -71,9 +74,19 @@ function App() {
           
           {/* The BrandingWatermark is placed outside the Routes so it appears on every page */}
           <BrandingWatermark />
+          <Toaster 
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: '#333',
+                  color: '#fff',
+                },
+              }}
+            />
         </div>
       </Router>
     </AuthProvider>
+    </SocketProvider>
   );
 }
 
