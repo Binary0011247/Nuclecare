@@ -137,7 +137,7 @@ const MrnText = styled.span`
 // --- The React Component ---
 
 const DashboardPage = () => {
-    const { logout } = useContext(AuthContext);
+    const { logout,token } = useContext(AuthContext);
     const socket = useContext(SocketContext);
     const [hubData, setHubData] = useState({ latestVitals: null, history: [], medications: [] });
     const [isLoading, setIsLoading] = useState(true);
