@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
         localStorage.setItem('token', res.data.token);
-        setAuthToken(res.data.token);
+        
         setToken(res.data.token);
         return res; // Return the response for the page to use
     };
@@ -57,14 +57,14 @@ export const AuthProvider = ({ children }) => {
     const register = async (formData) => {
         const res = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
         localStorage.setItem('token', res.data.token);
-        setAuthToken(res.data.token);
+        
         setToken(res.data.token);
         return res; // Return the response
     };
 
     const logout = () => {
         localStorage.removeItem('token');
-        setAuthToken(null);
+        
         setToken(null);
         setUser(null);
     };
