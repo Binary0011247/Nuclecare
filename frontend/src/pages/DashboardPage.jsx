@@ -281,7 +281,7 @@ const DashboardPage = () => {
                     )}
                 </HeaderLeft>
 
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative' }} ref={menuRef}>
                     <ProfilePulsar onClick={() => setIsMenuOpen(!isMenuOpen)}>
                         {userInitials}
                     </ProfilePulsar>

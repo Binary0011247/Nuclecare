@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 
 // Import the top-level provider for authentication
 import { AuthProvider } from './context/AuthContext.jsx';
+import { SocketProvider } from './context/SocketContext.jsx';
 import { Toaster } from 'react-hot-toast';
 
 // Import all the page components
@@ -18,7 +19,7 @@ import BrandingWatermark from './components/layout/BrandingWatermark.jsx';
 
 // Import global styles
 import './App.css';
-import { SocketProvider } from './context/SocketContext.jsx';
+
 
 function App() {
   return (
