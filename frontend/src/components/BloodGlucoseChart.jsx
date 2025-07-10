@@ -61,11 +61,13 @@ const BloodGlucoseChart = ({ data }) => {
                     />
                     <Tooltip 
                         contentStyle={{ 
-                            backgroundColor: '#222', 
-                            border: '1px solid #444', 
-                            borderRadius: '8px' 
+                            backgroundColor: 'rgba(27, 39, 53, 0.9)', 
+                            border: '1px solid #61dafb', 
+                            borderRadius: '8px' ,
+                            color: '#fff'
                         }}
-                        cursor={{fill: '#63a45b'}}
+                        labelStyle={{ color: '#f1c40f', fontWeight: 'bold' }}
+                        cursor={{fill: 'rgba(52, 152, 219, 0.1)'}}
                     />
                     <Legend />
                     <Bar dataKey="blood_glucose" name="Blood Glucose" >
