@@ -6,6 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 import styled, { keyframes } from 'styled-components';
 import { FaEnvelope, FaLock, FaUserMd, FaUserInjured } from 'react-icons/fa';
 import Modal from '../components/layout/Modal.jsx';
+import Spinner from '../components/layout/Spinner.jsx'; // Import your Spinner component
 
 
 // --- Styled Components for the UI ---
@@ -119,7 +120,7 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-const Spinner = styled.div`
+const ButtonSpinner = styled.div`
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-top-color: black;
   border-radius: 50%;
