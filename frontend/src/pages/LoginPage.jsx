@@ -141,12 +141,15 @@ const SubmitButton = styled.button`
   font-size: 1.1rem;
   cursor: pointer;
   font-weight: bold;
-  transition: all 0.3s ease;
-  position: absolute;          /* 1. Set as positioning context */
-  min-height: 53px;
+  transition: background 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
  
 
-  &:hover: not(:disabled) {
+  &:hover:  {
     background: #52b8d8;
   }
   
