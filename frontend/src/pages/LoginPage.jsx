@@ -119,6 +119,14 @@ const StyledInput = styled.input`
 const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
+const ButtonContentWrapper = styled.span`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  /* Make content invisible when loading, but still take up space */
+  visibility: ${props => props.isLoading ? 'hidden' : 'visible'};
+`;
 
 const ButtonSpinner = styled.div`
   position: absolute;
@@ -129,10 +137,11 @@ const ButtonSpinner = styled.div`
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-top-color: black;
   border-radius: 50%;
-  width: 20px; /* Slightly larger spinner for better visibility */
+  width: 20px;   /* Slightly larger spinner for better visibility */
   height: 20px;
   animation: ${spin} 0.8s linear infinite;
 `;
+
 
 const SubmitButton = styled.button`
   width: 100%;
@@ -144,13 +153,10 @@ const SubmitButton = styled.button`
   font-size: 1.1rem;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.3s ease;
-  position: relative; /* 1. Set as positioning context */
+  transition: all 0.3s ease;
+  position: relative;          /* 1. Set as positioning context */
   min-height: 53px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
+ 
 
   &:hover {
     background: #52b8d8;
@@ -330,6 +336,7 @@ const handleVerifyIdentity = async () => {
                         
                         <SubmitButton type="submit" disabled={isLoading}>
                           {isLoading ? <ButtonSpinner /> : 'Login'}
+                          <ButtonContentWrapper isLoading={isLoading}></ButtonContentWrapper>
                         </SubmitButton>
                     </Form>
                     <SubText>
