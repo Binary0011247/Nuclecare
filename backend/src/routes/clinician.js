@@ -97,7 +97,7 @@ router.get(
             const [profileRes, vitalsHistoryRes, medicationsRes] = await Promise.all([
                 db.query('SELECT id, full_name, email,mrn FROM users WHERE id = $1 AND role = \'patient\'', [patientId]),
                 db.query('SELECT * FROM patients_vitals WHERE user_id = $1 ORDER BY created_at DESC', [patientId]),
-                db.query('SELECT m.id, m.name, m.dosage, m.frequency, (SELECT taken_at FROM medication_adherence_log mal WHERE mal.medication_id = m.id ORDER BY taken_at DESC LIMIT 1) as last_taken FROM medications m WHERE m.user_id = $1 ORDER BY m.name', [patientId])
+                db.query('SELECT m.id, m.name, m.dosage, m.frequency, (SELECT taken_at FROM medication_adherence_log mal WHERE mal.medication_id = m.id ORDER BY taken_at DESC LIMIT 1) as last_taken FROM medications m WHERE m.user_id = $1 ORDER BY m.created_at DESC', [patientId])
             ]);
 
             if (profileRes.rows.length === 0) {
@@ -172,6 +172,35 @@ router.delete(
 
             // Send a success message.
             res.json({ msg: 'Patient successfully discharged from your care.' });
+
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    }
+);
+
+router.delete(
+    '/medications/:id',
+    [authMiddleware, checkRole('clinician')],
+    async (req, res) => {
+        const medicationId = req.params.id;
+
+        try {
+            // First, for security, let's verify that the medication exists
+            const medResult = await db.query('SELECT * FROM medications WHERE id = $1', [medicationId]);
+
+            if (medResult.rows.length === 0) {
+                return res.status(404).json({ msg: 'Medication not found.' });
+            }
+
+            // Now, delete the medication record
+            await db.query('DELETE FROM medications WHERE id = $1', [medicationId]);
+            
+            // Note: ON DELETE CASCADE in our database schema will automatically delete
+            // any related entries in the 'medication_adherence_log' table.
+
+            res.json({ msg: 'Medication has been successfully discontinued.' });
 
         } catch (err) {
             console.error(err.message);

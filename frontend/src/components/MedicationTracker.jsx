@@ -68,9 +68,63 @@ const NoMedsMessage = styled.p`
     margin-top: 20px;
 `;
 
+const ActionWrapper = styled.div`
+  position: relative;
+`;
+
+const MoreOptionsButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #374151;
+  }
+`;
+
+const ActionMenu = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2c3e50;
+  border-radius: 6px;
+  border: 1px solid #34495e;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10;
+  width: 180px;
+  overflow: hidden;
+`;
+
+const ActionMenuItem = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 15px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  color: ${props => props.isDestructive ? '#e74c3c' : '#ecf0f1'};
+  cursor: pointer;
+  
+  &:hover {
+    background-color: ${props => props.isDestructive ? '#c0392b' : '#3498db'};
+    color: white;
+  }
+`;
+
+
 // --- The React Component ---
 
-const MedicationTracker = ({ medications, onLogTaken }) => {
+const MedicationTracker = ({ medications, onLogTaken,onDiscontinue, isClinicianView = false }) => {
 
     // Helper function to check if a medication was taken today
     const isTakenToday = (lastTakenTimestamp) => {
@@ -89,15 +143,23 @@ const MedicationTracker = ({ medications, onLogTaken }) => {
             {medications.map(med => {
                 const taken = isTakenToday(med.last_taken);
                 return (
-                    <MedItem key={med.id} isTaken={taken}>
+                    <MedItem key={med.id} isTaken={isTakenToday(med.last_taken)}>
+                      
                         <MedInfo>
                             <MedName>{med.name} ({med.dosage})</MedName>
                             <MedDetails>{med.frequency}</MedDetails>
                         </MedInfo>
+                        {isClinicianView ? (
+                        // Clinician sees a "Discontinue" button
+                        <ActionButton onClick={() => onDiscontinue(med)}>
+                            Discontinue
+                        </ActionButton>
+                    ) : (
                         <LogButton onClick={() => onLogTaken(med.id)} disabled={taken}>
                             {taken ? <FaCheckCircle /> : <FaClock />}
                             {taken ? 'Taken Today' : 'Log as Taken'}
                         </LogButton>
+                    )}
                     </MedItem>
                 );
             })}

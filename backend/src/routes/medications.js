@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
                  ORDER BY mal.taken_at DESC LIMIT 1) as last_taken
             FROM medications m
             WHERE m.user_id = $1
-            ORDER BY m.name;
+            ORDER BY m.created_at DESC;
         `;
         const { rows } = await db.query(query, [req.user.id]);
         res.json(rows);

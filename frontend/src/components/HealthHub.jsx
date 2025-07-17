@@ -32,7 +32,7 @@ const AuraCard = styled(Card)`
 `;
 
 // --- The Component ---
-const HealthHub = ({ data, isLoading, onLogMedication, onLogVitals, showVitalsForm = false }) => {
+const HealthHub = ({ data, onDiscontinue, isClinicianView,isLoading, onLogMedication, onLogVitals, showVitalsForm = false }) => {
     if (isLoading) return <Spinner />;
 
     // --- THIS IS THE CORRECTED DATA LOGIC ---
@@ -69,7 +69,12 @@ const HealthHub = ({ data, isLoading, onLogMedication, onLogVitals, showVitalsFo
 
             <Card>
                 <h3>Medication Adherence</h3>
-                <MedicationTracker medications={medications} onLogTaken={onLogMedication} />
+                <MedicationTracker 
+                medications={medications} 
+                onLogTaken={onLogMedication} 
+                onDiscontinue={onDiscontinue} // Pass it down
+             isClinicianView={isClinicianView} // Pass it down
+             />
             </Card>
 
             {showVitalsForm && (

@@ -12,6 +12,7 @@ import { FaArrowLeft, FaSignOutAlt, FaBrain } from 'react-icons/fa';
 import Modal from '../../components/layout/Modal.jsx';
 import { dischargePatient } from '../../api/clinician.js';
 import { FaExclamationTriangle } from 'react-icons/fa';
+import { discontinueMedication } from '../../api/clinician.js';
 
 // --- Styled Components for the new layout ---
 
@@ -251,6 +252,9 @@ const PatientDetailPage = () => {
     const [isDischargeModalOpen, setIsDischargeModalOpen] = useState(false);
     const [confirmationMrn, setConfirmationMrn] = useState('');
     const [isDischarging, setIsDischarging] = useState(false);
+    const [medicationToDiscontinue, setMedicationToDiscontinue] = useState(null);
+    const [isDiscontinueModalOpen, setIsDiscontinueModalOpen] = useState(false);
+    const [isDiscontinuing, setIsDiscontinuing] = useState(false);
     
 
      const fetchData = async () => {
@@ -332,6 +336,28 @@ const PatientDetailPage = () => {
             setIsDischargeModalOpen(false);
         }
     };
+    const openDiscontinueModal = (medication) => {
+        setMedicationToDiscontinue(medication);
+        setIsDiscontinueModalOpen(true);
+    };
+
+    const handleDiscontinueConfirm = async () => {
+        if (!medicationToDiscontinue) return;
+        
+        setIsDiscontinuing(true);
+        try {
+            await discontinueMedication(medicationToDiscontinue.id);
+            alert(`${medicationToDiscontinue.name} has been discontinued.`);
+            fetchData(); // Refetch all data to update the list
+        } catch (err) {
+            console.error("Failed to discontinue medication:", err);
+            alert("An error occurred. Could not discontinue medication.");
+        } finally {
+            setIsDiscontinuing(false);
+            setIsDiscontinueModalOpen(false);
+            setMedicationToDiscontinue(null);
+        }
+      };
 
     return (
       <>
@@ -368,7 +394,12 @@ const PatientDetailPage = () => {
             </Sidebar>
 
             <MainContent>
-                <HealthHub data={patientData} isLoading={isLoading} />
+                <HealthHub 
+                data={patientData} 
+                isLoading={isLoading} 
+                onDiscontinue={openDiscontinueModal} // Pass the handler
+                isClinicianView={true}
+                />
                 
             </MainContent>
         </PageLayout>
@@ -402,6 +433,20 @@ const PatientDetailPage = () => {
                 {isDischarging ? 'Discharging...' : 'I understand, discharge this patient'}
             </ConfirmButton>
         </Modal>
+        <Modal isOpen={isDiscontinueModalOpen} onClose={() => setIsDiscontinueModalOpen(false)}>
+                <ModalTitle><FaExclamationTriangle /> Confirm Discontinuation</ModalTitle>
+                <ModalText>
+                    Are you sure you want to discontinue <strong>{medicationToDiscontinue?.name} ({medicationToDiscontinue?.dosage})</strong> for this patient?
+                </ModalText>
+                <ModalText>This will remove it from their active medication list.</ModalText>
+                <ConfirmButton 
+                    onClick={handleDiscontinueConfirm} 
+                    disabled={isDiscontinuing}
+                >
+                    {isDiscontinuing ? 'Processing...' : 'Yes, Discontinue Medication'}
+                </ConfirmButton>
+            </Modal>
+            
       </>   
     );
 

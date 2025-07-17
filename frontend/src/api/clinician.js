@@ -33,3 +33,6 @@ export const getSynopsisHistory = (patientId) => {
 export const dischargePatient = (patientId) => {
     return axios.delete(`${API_URL}/patient/${patientId}/assignment`);
 };
+export const discontinueMedication = (medicationId) => {
+    return axios.delete(`${API_URL}/medications/${medicationId}`);
+};
