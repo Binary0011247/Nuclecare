@@ -145,7 +145,7 @@ const SubmitButton = styled.button`
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s ease;
-  position: relative; /* 1. Set as positioning context */
+
   min-height: 53px;
   display: flex;
   justify-content: center;
