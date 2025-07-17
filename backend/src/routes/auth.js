@@ -187,13 +187,15 @@ router.post('/verify-identity', [
     
     try {
         let userResult;
+        let query;
+        const queryParams = [email, uniqueId.trim().toUpperCase(), role];
         // Build the query based on the selected role
-        if (role === 'patient') {
-            userResult = await db.query('SELECT * FROM users WHERE email = $1 AND mrn = $2 AND role = $3', [email, uniqueId.toUpperCase(), role]);
+         if (role === 'patient') {
+            query = 'SELECT * FROM users WHERE email = $1 AND mrn = $2 AND role = $3';
         } else { // role === 'clinician'
-            userResult = await db.query('SELECT * FROM users WHERE email = $1 AND clinician_code = $2 AND role = $3', [email, uniqueId.toUpperCase(), role]);
+            query = 'SELECT * FROM users WHERE email = $1 AND clinician_code = $2 AND role = $3';
         }
-
+        userResult = await db.query(query, queryParams);
         if (userResult.rows.length === 0) {
             return res.status(400).json({ msg: 'Verification failed. Please check the details and try again.' });
         }
