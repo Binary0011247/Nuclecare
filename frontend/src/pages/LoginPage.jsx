@@ -171,6 +171,46 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
+const ModalTitle = styled.h2`
+  color: white;
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: center;
+`;
+const ModalDescription = styled.p`
+  color: #bdc3c7;
+  text-align: center;
+  margin-bottom: 25px;
+`;
+const RoleSelector = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+`;
+const RadioLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid #34495e;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: ${props => props.checked ? '#3498db' : 'transparent'};
+  color: ${props => props.checked ? 'white' : '#bdc3c7'};
+  
+  input {
+    display: none;
+  }
+`;
+const ModalMessage = styled.p`
+  text-align: center;
+  font-weight: bold;
+  margin-top: 15px;
+  color: ${props => props.type === 'error' ? '#e74c3c' : '#2ecc71'};
+`;
+
 // --- The React Component ---
 
 const LoginPage = () => {
@@ -179,6 +219,18 @@ const LoginPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+    const [modalStage, setModalStage] = useState('verify');
+    const [resetRole, setResetRole] = useState('patient');
+    const [resetEmail, setResetEmail] = useState('');
+    const [uniqueId, setUniqueId] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [tempResetPass, setTempResetPass] = useState(null);
+    const [userIdToReset, setUserIdToReset] = useState(null);
+    const [modalMessage, setModalMessage] = useState({ type: '', text: '' });
+    const [isModalLoading, setIsModalLoading] = useState(false);
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -206,8 +258,44 @@ const LoginPage = () => {
             setIsLoading(false);
         }
     };
+const handleVerifyIdentity = async () => {
+        setIsModalLoading(true);
+        setModalMessage({ type: '', text: '' });
+        try {
+            const res = await verifyUserIdentity({ email: resetEmail, role: resetRole, uniqueId });
+            setTempResetPass(res.data.resetPass);
+            setUserIdToReset(res.data.userId);
+            setModalStage('reset');
+        } catch (err) {
+            setModalMessage({ type: 'error', text: err.response?.data?.msg || 'Verification failed.' });
+        } finally {
+            setIsModalLoading(false);
+        }
+    };
 
+    const handleResetPassword = async () => {
+        if (newPassword !== confirmPassword) {
+            setModalMessage({ type: 'error', text: 'Passwords do not match.' });
+            return;
+        }
+        setIsModalLoading(true);
+        setModalMessage({ type: '', text: '' });
+        try {
+            const res = await resetPasswordWithPass({ userId: userIdToReset, resetPass: tempResetPass, password: newPassword });
+            setModalMessage({ type: 'success', text: res.data.msg });
+            setModalStage('success');
+            setTimeout(() => {
+                setIsForgotModalOpen(false);
+                setModalStage('verify'); // Reset for next time
+            }, 3000);
+        } catch (err) {
+            setModalMessage({ type: 'error', text: err.response?.data?.msg || 'Reset failed.' });
+        } finally {
+            setIsModalLoading(false);
+        }
+    };
     return (
+      <>
         <PageContainer>
             <VisualPanel>
                 <h1>Welcome Back</h1>
@@ -234,11 +322,56 @@ const LoginPage = () => {
                         </SubmitButton>
                     </Form>
                     <SubText>
+                            <a href="#" onClick={(e) => { e.preventDefault(); setIsForgotModalOpen(true); }}>Forgot Password?</a>
+                        </SubText>
+                    <SubText>
                         Don't have an account? <Link to="/register">Sign Up</Link>
                     </SubText>
                 </FormBox>
             </FormPanel>
         </PageContainer>
+        <Modal isOpen={isForgotModalOpen} onClose={() => setIsForgotModalOpen(false)}>
+                {modalStage === 'verify' && (
+                    <>
+                        <ModalTitle>Identity Verification</ModalTitle>
+                        <ModalDescription>To reset your password, please verify your identity.</ModalDescription>
+                        <RoleSelector>
+                            <RadioLabel checked={resetRole === 'patient'}>
+                                <input type="radio" value="patient" checked={resetRole === 'patient'} onChange={(e) => setResetRole(e.target.value)} />
+                                <FaUserInjured /> Patient
+                            </RadioLabel>
+                            <RadioLabel checked={resetRole === 'clinician'}>
+                                <input type="radio" value="clinician" checked={resetRole === 'clinician'} onChange={(e) => setResetRole(e.target.value)} />
+                                <FaUserMd /> Clinician
+                            </RadioLabel>
+                        </RoleSelector>
+                        <StyledInput type="email" placeholder="Your Email Address" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
+                        <StyledInput style={{marginTop: '15px'}} type="text" placeholder={resetRole === 'patient' ? "Your Patient MRN" : "Your Clinician Code"} value={uniqueId} onChange={(e) => setUniqueId(e.target.value.toUpperCase())} />
+                        <SubmitButton style={{marginTop: '20px'}} onClick={handleVerifyIdentity} disabled={isModalLoading}>
+                            {isModalLoading ? <ButtonSpinner /> : 'Verify Identity'}
+                        </SubmitButton>
+                    </>
+                )}
+                {modalStage === 'reset' && (
+                    <>
+                        <ModalTitle>Set New Password</ModalTitle>
+                        <ModalDescription>Verification successful. Please set a new password.</ModalDescription>
+                        <StyledInput type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                        <StyledInput style={{marginTop: '15px'}} type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                        <SubmitButton style={{marginTop: '20px'}} onClick={handleResetPassword} disabled={isModalLoading}>
+                            {isModalLoading ? <ButtonSpinner /> : 'Update Password'}
+                        </SubmitButton>
+                    </>
+                )}
+                {modalStage === 'success' && (
+                    <>
+                        <ModalTitle>Success!</ModalTitle>
+                        <ModalDescription>{modalMessage.text}</ModalDescription>
+                    </>
+                )}
+                {modalMessage.text && modalStage !== 'success' && <ModalMessage type={modalMessage.type}>{modalMessage.text}</ModalMessage>}
+            </Modal>
+        </>
     );
 };
 

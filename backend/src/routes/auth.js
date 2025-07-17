@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const db = require('../db');
 const authMiddleware = require('../middleware/authMiddleware');
-
+const crypto = require('crypto');
 // @route   POST api/auth/register
 // @desc    Register a user
 // @access  Public
@@ -169,6 +169,96 @@ router.get('/me', authMiddleware, async (req, res) => {
         }
 
         res.json(user.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+router.post('/verify-identity', [
+    check('email', 'Please include a valid email').isEmail(),
+    check('role', 'A valid role is required').isIn(['patient', 'clinician']),
+    check('uniqueId', 'A unique identifier is required').not().isEmpty()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { email, role, uniqueId } = req.body;
+    
+    try {
+        let userResult;
+        // Build the query based on the selected role
+        if (role === 'patient') {
+            userResult = await db.query('SELECT * FROM users WHERE email = $1 AND mrn = $2 AND role = $3', [email, uniqueId.toUpperCase(), role]);
+        } else { // role === 'clinician'
+            userResult = await db.query('SELECT * FROM users WHERE email = $1 AND clinician_code = $2 AND role = $3', [email, uniqueId.toUpperCase(), role]);
+        }
+
+        if (userResult.rows.length === 0) {
+            return res.status(400).json({ msg: 'Verification failed. Please check the details and try again.' });
+        }
+
+        const user = userResult.rows[0];
+
+        // Identity is verified. Now, generate a secure, one-time token for the reset.
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // Token expires in 10 minutes
+
+        const salt = bcrypt.genSaltSync(10);
+        const hashedToken = bcrypt.hashSync(resetToken, salt);
+        
+        await db.query(
+            'UPDATE users SET password_reset_token = $1, password_reset_expires = $2 WHERE id = $3',
+            [hashedToken, resetExpires, user.id]
+        );
+
+        // Send the un-hashed, one-time token back to the frontend.
+        // The frontend will need to include this in the next step.
+        res.json({ resetPass: resetToken, userId: user.id });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// --- NEW: RESET PASSWORD WITH TEMPORARY PASS ---
+router.post('/reset-password-with-pass', [
+    check('userId', 'User ID is required').isInt(),
+    check('resetPass', 'Reset pass is required').isString(),
+    check('password', 'New password is required').isLength({ min: 6 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { userId, resetPass, password } = req.body;
+
+    try {
+        const userResult = await db.query(
+            'SELECT * FROM users WHERE id = $1 AND password_reset_expires > NOW()',
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(400).json({ msg: 'Reset pass is invalid or has expired.' });
+        }
+        const user = userResult.rows[0];
+
+        const isMatch = bcrypt.compareSync(resetPass, user.password_reset_token);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Reset pass is invalid or has expired.' });
+        }
+
+        const salt = bcrypt.genSaltSync(10);
+        const passwordHash = bcrypt.hashSync(password, salt);
+
+        await db.query(
+            'UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL WHERE id = $2',
+            [passwordHash, userId]
+        );
+
+        res.json({ msg: 'Password has been successfully reset.' });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

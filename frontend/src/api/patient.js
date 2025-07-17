@@ -56,3 +56,11 @@ export const logMedicationTaken = (medicationId) => {
 export const getMyProfile = () => {
     return axios.get(`${API_URL_AUTH}/me`);
 };
+
+export const verifyUserIdentity = (data) => {
+    return axios.post(`${API_URL_AUTH}/verify-identity`, data);
+};
+
+export const resetPasswordWithPass = (data) => {
+    return axios.post(`${API_URL_AUTH}/reset-password-with-pass`, data);
+};
