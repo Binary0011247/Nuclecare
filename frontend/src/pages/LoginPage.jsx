@@ -119,26 +119,14 @@ const StyledInput = styled.input`
 const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
-const ButtonContentWrapper = styled.span`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  /* Make content invisible when loading, but still take up space */
-  visibility: ${props => props.isLoading ? 'hidden' : 'visible'};
-`;
 
-const ButtonSpinner = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  
+
+const Spinner = styled.div` 
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-top-color: black;
   border-radius: 50%;
-  width: 20px;   /* Slightly larger spinner for better visibility */
-  height: 20px;
+  width: 16px;
+  height: 16px;
   animation: ${spin} 0.8s linear infinite;
 `;
 
@@ -334,15 +322,9 @@ const handleVerifyIdentity = async () => {
                           <StyledInput type="password" name="password" placeholder="Password" value={formData.password} onChange={onChange} required disabled={isLoading} />
                         </InputWrapper>
                         
-                        <SubmitButton type="submit" disabled={isLoading}>
-                                {/* The spinner only renders when isLoading is true */}
-                                {isLoading && <ButtonSpinner />}
-
-                                {/* The text is now inside the wrapper */}
-                                <ButtonContentWrapper isLoading={isLoading}>
-                                    Login
-                                </ButtonContentWrapper>
-                          </SubmitButton>
+                         <SubmitButton type="submit" disabled={isLoading}>
+                          {isLoading ? <Spinner /> : 'Login'}
+                        </SubmitButton>
                     </Form>
                     <SubText>
                             <a href="#" onClick={(e) => { e.preventDefault(); setIsForgotModalOpen(true); }}>Forgot Password?</a>
@@ -371,7 +353,7 @@ const handleVerifyIdentity = async () => {
                         <StyledInput type="email" placeholder="Your Email Address" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
                         <StyledInput style={{marginTop: '15px'}} type="text" placeholder={resetRole === 'patient' ? "Your Patient MRN" : "Your Clinician Code"} value={uniqueId} onChange={(e) => setUniqueId(e.target.value.toUpperCase())} />
                         <SubmitButton style={{marginTop: '20px'}} onClick={handleVerifyIdentity} disabled={isModalLoading}>
-                            {isModalLoading ? <ButtonSpinner /> : 'Verify Identity'}
+                            {isModalLoading ? <Spinner /> : 'Verify Identity'}
                         </SubmitButton>
                     </>
                 )}
@@ -382,7 +364,7 @@ const handleVerifyIdentity = async () => {
                         <StyledInput type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                         <StyledInput style={{marginTop: '15px'}} type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                         <SubmitButton style={{marginTop: '20px'}} onClick={handleResetPassword} disabled={isModalLoading}>
-                            {isModalLoading ? <ButtonSpinner /> : 'Update Password'}
+                            {isModalLoading ? <Spinner /> : 'Update Password'}
                         </SubmitButton>
                     </>
                 )}
