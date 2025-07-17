@@ -158,7 +158,7 @@ const SubmitButton = styled.button`
   min-height: 53px;
  
 
-  &:hover {
+  &:hover: not(:disabled) {
     background: #52b8d8;
   }
   
@@ -335,9 +335,14 @@ const handleVerifyIdentity = async () => {
                         </InputWrapper>
                         
                         <SubmitButton type="submit" disabled={isLoading}>
-                          {isLoading ? <ButtonSpinner /> : 'Login'}
-                          <ButtonContentWrapper isLoading={isLoading}></ButtonContentWrapper>
-                        </SubmitButton>
+                                {/* The spinner only renders when isLoading is true */}
+                                {isLoading && <ButtonSpinner />}
+
+                                {/* The text is now inside the wrapper */}
+                                <ButtonContentWrapper isLoading={isLoading}>
+                                    Login
+                                </ButtonContentWrapper>
+                          </SubmitButton>
                     </Form>
                     <SubText>
                             <a href="#" onClick={(e) => { e.preventDefault(); setIsForgotModalOpen(true); }}>Forgot Password?</a>
