@@ -121,11 +121,16 @@ const spin = keyframes`
 `;
 
 const ButtonSpinner = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-top-color: black;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 20px; /* Slightly larger spinner for better visibility */
+  height: 20px;
   animation: ${spin} 0.8s linear infinite;
 `;
 
@@ -140,6 +145,8 @@ const SubmitButton = styled.button`
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s ease;
+  position: relative; /* 1. Set as positioning context */
+  min-height: 53px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -322,7 +329,7 @@ const handleVerifyIdentity = async () => {
                         </InputWrapper>
                         
                         <SubmitButton type="submit" disabled={isLoading}>
-                          {isLoading ? <Spinner /> : 'Login'}
+                          {isLoading ? <ButtonSpinner /> : 'Login'}
                         </SubmitButton>
                     </Form>
                     <SubText>
