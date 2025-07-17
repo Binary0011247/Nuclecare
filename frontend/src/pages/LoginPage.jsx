@@ -5,7 +5,7 @@ import { verifyUserIdentity, resetPasswordWithPass } from '../api/patient.js';
 import { jwtDecode } from 'jwt-decode';
 import styled, { keyframes } from 'styled-components';
 import { FaEnvelope, FaLock, FaUserMd, FaUserInjured } from 'react-icons/fa';
-import Modal from '../../components/layout/Modal.jsx'; // Import your Modal component
+
 
 
 // --- Styled Components for the UI ---
