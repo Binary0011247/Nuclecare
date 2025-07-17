@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 import styled, { keyframes } from 'styled-components';
 import { FaEnvelope, FaLock, FaUserMd, FaUserInjured } from 'react-icons/fa';
 import Modal from '../../components/layout/Modal.jsx'; // Import your Modal component
-import Spinner from '../../components/layout/Spinner.jsx'; // Import your Spinner component
+
 
 // --- Styled Components for the UI ---
 
