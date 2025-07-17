@@ -123,7 +123,43 @@ const ActionMenuItem = styled.button`
 
 
 // --- The React Component ---
+const ClinicianActions = ({ medication, onDiscontinue }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef(null);
 
+    // Click-away to close logic
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleDiscontinueClick = () => {
+        onDiscontinue(medication);
+        setIsOpen(false);
+    };
+
+    return (
+        <ActionWrapper ref={menuRef}>
+            <MoreOptionsButton onClick={() => setIsOpen(!isOpen)}>
+                <FaEllipsisV />
+            </MoreOptionsButton>
+            {isOpen && (
+                <ActionMenu>
+                    <ActionMenuItem $isDestructive onClick={handleDiscontinueClick}>
+                        <FaTrashAlt />
+                        Discontinue
+                    </ActionMenuItem>
+                    {/* Future actions like "Edit Dosage" can be added here */}
+                </ActionMenu>
+            )}
+        </ActionWrapper>
+    );
+};
 const MedicationTracker = ({ medications, onLogTaken,onDiscontinue, isClinicianView = false }) => {
 
     // Helper function to check if a medication was taken today
@@ -137,6 +173,7 @@ const MedicationTracker = ({ medications, onLogTaken,onDiscontinue, isClinicianV
     if (!medications || medications.length === 0) {
         return <NoMedsMessage>No medications have been prescribed yet.</NoMedsMessage>
     }
+  
 
     return (
         <TrackerContainer>
@@ -151,9 +188,7 @@ const MedicationTracker = ({ medications, onLogTaken,onDiscontinue, isClinicianV
                         </MedInfo>
                         {isClinicianView ? (
                         // Clinician sees a "Discontinue" button
-                        <ActionButton onClick={() => onDiscontinue(med)}>
-                            Discontinue
-                        </ActionButton>
+                         <ClinicianActions medication={med} onDiscontinue={onDiscontinue} />
                     ) : (
                         <LogButton onClick={() => onLogTaken(med.id)} disabled={taken}>
                             {taken ? <FaCheckCircle /> : <FaClock />}

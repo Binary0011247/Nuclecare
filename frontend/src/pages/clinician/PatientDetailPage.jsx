@@ -10,9 +10,9 @@ import HealthSynopsisReport from '../../components/clinician/Health-Synopsis-Rep
 import styled, { keyframes } from 'styled-components';
 import { FaArrowLeft, FaSignOutAlt, FaBrain } from 'react-icons/fa';
 import Modal from '../../components/layout/Modal.jsx';
-import { dischargePatient } from '../../api/clinician.js';
+import { dischargePatient,discontinueMedication } from '../../api/clinician.js';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import { discontinueMedication } from '../../api/clinician.js';
+
 
 // --- Styled Components for the new layout ---
 
@@ -446,7 +446,7 @@ const PatientDetailPage = () => {
                     {isDiscontinuing ? 'Processing...' : 'Yes, Discontinue Medication'}
                 </ConfirmButton>
             </Modal>
-            
+
       </>   
     );
 
