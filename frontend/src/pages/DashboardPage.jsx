@@ -232,10 +232,14 @@ const HeartBadge = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease-in-out;
-
+  animation: 
+    ${props => pump} ${props => props.speed}s ease-in-out infinite,
+    ${props => glow(props.color)} ${props => props.speed * 2}s linear infinite;
+  
+  /* Use a transform on the hover, not a scale, to avoid interfering with the pump animation */
+  transition: filter 0.3s ease;
   &:hover {
-    transform: scale(1.1);
+    filter: brightness(1.2);
   }
 `;
 
@@ -411,9 +415,9 @@ const DashboardPage = () => {
 
     const auraStyle = useMemo(() => {
         const score = hubData.latestVitals?.health_score ?? 95;
-        if (score > 85) return { color: '#2ecc71', speed: 1.8 };
-        if (score > 60) return { color: '#f1c40f', speed: 1.2 };
-        return { color: '#e74c3c', speed: 0.8 };
+        if (score > 85) return { color: '#2ecc71', speed: 2.5 };
+        if (score > 60) return { color: '#f1c40f', speed: 1.5 };
+        return { color: '#e74c3c', speed: 1.0 };
     }, [hubData.latestVitals]);
 
     if (isLoading) {
@@ -437,7 +441,11 @@ const DashboardPage = () => {
                 <HeaderRight>
                     {/* --- THIS IS THE NEW "HEART-BADGE" PROFILE ICON --- */}
                     <ProfileWrapper ref={menuRef}>
-                        <HeartBadge onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                        <HeartBadge 
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            color={auraStyle.color}
+                            speed={auraStyle.speed}
+                        >
                             <HeartIcon color={auraStyle.color} />
                             <InitialsText>{userInitials}</InitialsText>
                         </HeartBadge>
