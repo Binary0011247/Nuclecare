@@ -12,7 +12,20 @@ import LogVitalsForm from '../components/LogVitalsForm.jsx'; // For the modal
 import Modal from '../components/layout/Modal.jsx'; // For the modal
 import { FaSignOutAlt,FaPlus } from 'react-icons/fa';
 
+const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 11) return 'morning';
+    if (hour >= 11 && hour < 17) return 'daytime';
+    if (hour >= 17 && hour < 23) return 'evening';
+    return 'night';
+};
 
+const backgroundThemes = {
+    morning: 'linear-gradient(180deg, #89f7fe 0%, #66a6ff 100%)',
+    daytime: 'linear-gradient(180deg, #3498db 0%, #2980b9 100%)',
+    evening: 'linear-gradient(180deg, #f39c12 0%, #8e44ad 100%)',
+    night: 'linear-gradient(180deg, #111827 0%, #090a0f 100%)',
+};
 
 // --- Keyframes for Animations (for the new menu and pulsar) ---
 const pulseGlow = keyframes`
@@ -27,10 +40,11 @@ const slideIn = keyframes`
 // --- Styled Components for the Redesigned UI ---
 
 const PageContainer = styled.div`
-   background-color: #1a1d23;
+   background: ${props => props.background};
   min-height: 100vh;
   position: relative; /* Anchor for background elements */
   overflow-x: hidden;
+  transition: background 2s ease-in-out; 
 `;
 
 const Header = styled.header`
@@ -200,6 +214,18 @@ const DashboardPage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
      const menuRef = useRef(null);
      const [patientMrn, setPatientMrn] = useState('');
+      const [timeOfDay, setTimeOfDay] = useState(getTimeOfDay());
+
+
+      useEffect(() => {
+        // Set an interval to check the time every 5 minutes
+        const intervalId = setInterval(() => {
+            setTimeOfDay(getTimeOfDay());
+        }, 300000); // 300000ms = 5 minutes
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, []);
 
     // This function generates initials from a full name
     const getInitials = (name) => {
@@ -330,7 +356,7 @@ const DashboardPage = () => {
     }
 
     return (
-        <PageContainer>
+        <PageContainer background={backgroundThemes[timeOfDay]}>
             <Header>
                 <HeaderLeft>
                     <Brand>Nuclecare</Brand>
