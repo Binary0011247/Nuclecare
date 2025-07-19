@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext,useRef } from 'react';
+import React, { useState, useEffect, useContext,useRef,useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { SocketContext } from '../context/SocketContext.jsx';
 import { getLatestVitals, getVitalsHistory, getMedications, logMedicationTaken, submitPulseCheck, getMyProfile } from '../api/patient.js';
