@@ -20,12 +20,13 @@ const glow = (color) => keyframes`
 // --- Styled Components ---
 
 const AuraContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 20px auto;
-  min-height: 250px; /* Provides consistent spacing */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1; /* Place it behind the content */
+  opacity: 0.1; /* Very subtle */
+  pointer-events: none;
 `;
 
 const HeartIconWrapper = styled.div`
@@ -35,7 +36,7 @@ const HeartIconWrapper = styled.div`
     ${props => pump} ${props => props.speed}s ease-in-out infinite,
     ${props => glow(props.color)} ${props => props.speed * 2}s linear infinite;
   
-  transition: color 1.5s ease; /* Smooth transition when the color changes */
+  transition: color 2s ease; /* Smooth transition when the color changes */
 `;
 
 const InsightText = styled.p`
@@ -71,11 +72,9 @@ const HealthAura = ({ healthScore, insight }) => {
     <AuraContainer>
       <HeartIconWrapper color={auraStyle.color} speed={auraStyle.speed}>
         {/* Render the medical heart icon with a large size */}
-        <BsFillHeartPulseFill size={140} />
+        <BsFillHeartPulseFill size={500} />
       </HeartIconWrapper>
-      <InsightText>
-        {insight || "Your health summary will appear here."}
-      </InsightText>
+      
     </AuraContainer>
   );
 };

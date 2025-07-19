@@ -7,7 +7,10 @@ import { jwtDecode } from 'jwt-decode';
 import styled, { keyframes } from 'styled-components';
 import HealthHub from '../components/HealthHub.jsx';
 import Spinner from '../components/layout/Spinner.jsx';
-import { FaSignOutAlt } from 'react-icons/fa';
+import HealthAura from '../components/HealthAura.jsx'; // Import the background Aura
+import LogVitalsForm from '../components/LogVitalsForm.jsx'; // For the modal
+import Modal from '../components/layout/Modal.jsx'; // For the modal
+import { FaSignOutAlt,FaPlus } from 'react-icons/fa';
 
 
 
@@ -24,8 +27,10 @@ const slideIn = keyframes`
 // --- Styled Components for the Redesigned UI ---
 
 const PageContainer = styled.div`
-  background-color: #1a1d23;
+   background-color: #1a1d23;
   min-height: 100vh;
+  position: relative; /* Anchor for background elements */
+  overflow-x: hidden;
 `;
 
 const Header = styled.header`
@@ -134,6 +139,54 @@ const MrnText = styled.span`
   font-weight: bold;
   font-family: 'Courier New', Courier, monospace;
 `;
+const MainContentWrapper = styled.div`
+  position: relative; /* This will contain the HealthHub and the background Aura */
+  z-index: 2;
+`;
+
+// --- NEW: The AI Insight Ticker ---
+const insightTicker = keyframes`
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+`;
+const InsightTickerWrapper = styled.div`
+  background-color: ${props => props.bgColor};
+  color: white;
+  padding: 10px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: background-color 1.5s ease;
+`;
+const InsightText = styled.p`
+  display: inline-block;
+  padding-left: 100%;
+  animation: ${insightTicker} 20s linear infinite;
+  font-weight: 500;
+`;
+
+// --- NEW: The Floating Action Button (FAB) ---
+const FloatingActionButton = styled.button`
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #3498db, #8e44ad);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.2s ease-in-out;
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
 // --- The React Component ---
 
 const DashboardPage = () => {
@@ -141,6 +194,7 @@ const DashboardPage = () => {
     const socket = useContext(SocketContext);
     const [hubData, setHubData] = useState({ latestVitals: null, history: [], medications: [] });
     const [isLoading, setIsLoading] = useState(true);
+    const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
     const [userInitials, setUserInitials] = useState('');
     const [userName, setUserName] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -209,6 +263,7 @@ const DashboardPage = () => {
      const handleFormSubmit = async (formData) => {
         try {
             await submitPulseCheck(formData);
+             setIsVitalsModalOpen(false);
             fetchDashboardData(); // Refetch ALL data to update the UI
         } catch(err) {
             console.error("Failed to submit vitals:", err);
@@ -263,6 +318,13 @@ const DashboardPage = () => {
         }
     }, [socket, token]); // This effect will re-run if the socket connection or token changes
 
+    const insightStyle = useMemo(() => {
+        const score = hubData.latestVitals?.health_score ?? 95;
+        if (score > 85) return { color: 'rgba(46, 204, 113, 0.8)' }; // Green
+        if (score > 60) return { color: 'rgba(241, 196, 15, 0.8)' }; // Yellow
+        return { color: 'rgba(231, 76, 60, 0.8)' }; // Red
+    }, [hubData.latestVitals]);
+
     if (isLoading) {
         return <Spinner />;
     }
@@ -295,14 +357,29 @@ const DashboardPage = () => {
                     )}
                 </div>
             </Header>
+            {hubData.latestVitals?.insight_text && (
+                <InsightTickerWrapper bgColor={insightStyle.color}>
+                    <InsightText>{hubData.latestVitals.insight_text}</InsightText>
+                </InsightTickerWrapper>
+            )}
+             <MainContentWrapper>
+                {/* The HealthAura now lives in the background */}
+                <HealthAura healthScore={hubData.latestVitals?.health_score} />
 
             <HealthHub 
                 data={hubData}
                 isLoading={false} // Loading is handled by this page, not the hub
                 onLogMedication={handleLogMedication}
-                onLogVitals={handleFormSubmit}
-                showVitalsForm={true}
+                
             />
+            </MainContentWrapper>
+            <FloatingActionButton onClick={() => setIsVitalsModalOpen(true)} title="Log Today's Vitals">
+                <FaPlus />
+            </FloatingActionButton>
+            <Modal isOpen={isVitalsModalOpen} onClose={() => setIsVitalsModalOpen(false)}>
+                <h2>Log Today's Readings</h2>
+                <LogVitalsForm onSubmit={handleFormSubmit} />
+            </Modal>
         </PageContainer>
     );
 };

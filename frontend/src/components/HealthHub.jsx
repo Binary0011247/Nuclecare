@@ -26,10 +26,7 @@ const Card = styled.div`
   flex-direction: column;
   h3 { margin-top: 0; color: #61dafb; }
 `;
-const AuraCard = styled(Card)`
-  grid-column: 1 / -1;
-  text-align: center;
-`;
+
 
 // --- The Component ---
 const HealthHub = ({ data, onDiscontinue, isClinicianView,isLoading, onLogMedication, onLogVitals, showVitalsForm = false }) => {
@@ -48,13 +45,7 @@ const HealthHub = ({ data, onDiscontinue, isClinicianView,isLoading, onLogMedica
 
     return (
         <HubLayout>
-            <AuraCard>
-                {/* Now, this will always have the correct data for both patient and clinician views */}
-                <HealthAura 
-                    healthScore={latestVitals?.health_score} 
-                    insight={latestVitals?.insight_text} 
-                />
-            </AuraCard>
+            
 
             <Card>
                 <h3>Vitals Trend (Last 30 Days)</h3>
@@ -77,12 +68,7 @@ const HealthHub = ({ data, onDiscontinue, isClinicianView,isLoading, onLogMedica
              />
             </Card>
 
-            {showVitalsForm && (
-              <Card>
-                  <h3>Log Today's Readings</h3>
-                  <LogVitalsForm onSubmit={onLogVitals} />
-              </Card>
-            )}
+            
         </HubLayout>
     );
 };
