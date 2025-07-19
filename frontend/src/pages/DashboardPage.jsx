@@ -11,26 +11,38 @@ import HealthAura from '../components/HealthAura.jsx'; // Import the background 
 import LogVitalsForm from '../components/LogVitalsForm.jsx'; // For the modal
 import Modal from '../components/layout/Modal.jsx'; // For the modal
 import { FaSignOutAlt,FaPlus } from 'react-icons/fa';
+import { BsFillHeartPulseFill } from 'react-icons/bs';
 
-const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 11) return 'morning';
-    if (hour >= 11 && hour < 17) return 'daytime';
-    if (hour >= 17 && hour < 23) return 'evening';
-    return 'night';
-};
+//const getTimeOfDay = () => {
+  //  const hour = new Date().getHours();
+    //if (hour >= 5 && hour < 11) return 'morning';
+    //if (hour >= 11 && hour < 17) return 'daytime';
+    //if (hour >= 17 && hour < 23) return 'evening';
+    //return 'night';
+//};/
 
-const backgroundThemes = {
+/*const backgroundThemes = {
     morning: 'linear-gradient(180deg, #89f7fe 0%, #66a6ff 100%)',
     daytime: 'linear-gradient(180deg, #3498db 0%, #2980b9 100%)',
     evening: 'linear-gradient(180deg, #f39c12 0%, #8e44ad 100%)',
     night: 'linear-gradient(180deg, #111827 0%, #090a0f 100%)',
-};
+};*/
 
 // --- Keyframes for Animations (for the new menu and pulsar) ---
 const pulseGlow = keyframes`
   0%, 100% { box-shadow: 0 0 10px 2px #e67e22; } /* Using the 'healthy' orange/gold color */
   50% { box-shadow: 0 0 15px 5px #e67e22; }
+`;
+
+const pump = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+`;
+const glow = (color) => keyframes`
+  0% { filter: drop-shadow(0 0 5px ${color}); }
+  50% { filter: drop-shadow(0 0 15px ${color}); }
+  100% { filter: drop-shadow(0 0 5px ${color}); }
 `;
 const slideIn = keyframes`
   from { opacity: 0; transform: translateY(-10px); }
@@ -40,11 +52,12 @@ const slideIn = keyframes`
 // --- Styled Components for the Redesigned UI ---
 
 const PageContainer = styled.div`
-   background: ${props => props.background};
+   background:  #1a1d23;
   min-height: 100vh;
   position: relative; /* Anchor for background elements */
   overflow-x: hidden;
-  transition: background 2s ease-in-out; 
+  
+
 `;
 
 const Header = styled.header`
@@ -83,24 +96,24 @@ const WelcomeMessage = styled.p`
   }
 `;
 
-const ProfilePulsar = styled.div`
+const HealthPulsar = styled.div`
   position: relative;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #2c3e50;
-  border: 2px solid #e67e22;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: white;
   cursor: pointer;
   z-index: 20;
-  animation: ${pulseGlow} 4s infinite;
-  transition: transform 0.3s ease;
-  &:hover { transform: scale(1.1); }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* The heart icon's styling is now controlled by props */
+  color: ${props => props.color};
+  animation: 
+    ${props => pump} ${props => props.speed}s ease-in-out infinite,
+    ${props => glow(props.color)} ${props => props.speed * 2}s linear infinite;
+  transition: all 0.5s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 `;
 
 const OrbitalMenu = styled.div`
@@ -201,6 +214,7 @@ const FloatingActionButton = styled.button`
     transform: scale(1.1);
   }
 `;
+
 // --- The React Component ---
 
 const DashboardPage = () => {
@@ -217,7 +231,7 @@ const DashboardPage = () => {
       const [timeOfDay, setTimeOfDay] = useState(getTimeOfDay());
 
 
-      useEffect(() => {
+      /*useEffect(() => {
         // Set an interval to check the time every 5 minutes
         const intervalId = setInterval(() => {
             setTimeOfDay(getTimeOfDay());
@@ -225,7 +239,7 @@ const DashboardPage = () => {
 
         // Clean up the interval when the component unmounts
         return () => clearInterval(intervalId);
-    }, []);
+    }, []);*/
 
     // This function generates initials from a full name
     const getInitials = (name) => {
@@ -351,12 +365,19 @@ const DashboardPage = () => {
         return { color: 'rgba(231, 76, 60, 0.8)' }; // Red
     }, [hubData.latestVitals]);
 
+    const auraStyle = useMemo(() => {
+        const score = hubData.latestVitals?.health_score ?? 95;
+        if (score > 85) return { color: '#2ecc71', speed: 1.8 };
+        if (score > 60) return { color: '#f1c40f', speed: 1.2 };
+        return { color: '#e74c3c', speed: 0.8 };
+    }, [hubData.latestVitals]);
+
     if (isLoading) {
         return <Spinner />;
     }
 
     return (
-        <PageContainer background={backgroundThemes[timeOfDay]}>
+        <PageContainer>
             <Header>
                 <HeaderLeft>
                     <Brand>Nuclecare</Brand>
@@ -370,9 +391,14 @@ const DashboardPage = () => {
                 </HeaderLeft>
 
                 <div style={{ position: 'relative' }} ref={menuRef}>
-                    <ProfilePulsar onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        {userInitials}
-                    </ProfilePulsar>
+                    <HealthPulsar 
+                        color={auraStyle.color} 
+                        speed={auraStyle.speed}
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    >
+                        <BsFillHeartPulseFill size={40} />
+                    </HealthPulsar>
+
                     {isMenuOpen && (
                         <OrbitalMenu>
                             <MenuItem onClick={logout}>
