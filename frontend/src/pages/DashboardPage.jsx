@@ -416,7 +416,7 @@ const DashboardPage = () => {
             )}
              <MainContentWrapper>
                 {/* The HealthAura now lives in the background */}
-                <HealthAura healthScore={hubData.latestVitals?.health_score} />
+                {/*<HealthAura healthScore={hubData.latestVitals?.health_score} />*/}
 
             <HealthHub 
                 data={hubData}
