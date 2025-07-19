@@ -10,8 +10,8 @@ import Spinner from '../components/layout/Spinner.jsx';
 import HealthAura from '../components/HealthAura.jsx'; // Import the background Aura
 import LogVitalsForm from '../components/LogVitalsForm.jsx'; // For the modal
 import Modal from '../components/layout/Modal.jsx'; // For the modal
-import { FaSignOutAlt,FaPlus } from 'react-icons/fa';
-import { BsFillHeartPulseFill } from 'react-icons/bs';
+import { FaSignOutAlt,FaPlus,FaHeart } from 'react-icons/fa';
+//import { BsFillHeartPulseFill } from 'react-icons/bs';
 
 //const getTimeOfDay = () => {
   //  const hour = new Date().getHours();
@@ -215,6 +215,45 @@ const FloatingActionButton = styled.button`
   }
 `;
 
+const ProfileWrapper = styled.div`
+  position: relative; /* Anchor for the menu */
+`;
+
+const HeartBadge = styled.div`
+  position: relative;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
+
+const HeartIcon = styled(FaHeart)`
+  /* The heart icon itself */
+  font-size: 50px;
+  color: ${props => props.color}; /* Dynamic color from health score */
+  transition: color 1.5s ease;
+`;
+
+const InitialsText = styled.span`
+  /* The initials text, positioned on top of the heart */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #1a1d23; /* Dark color for contrast against the heart */
+  font-size: 0.9rem;
+  font-weight: bold;
+  pointer-events: none; /* Allows clicks to pass through to the heart */
+  user-select: none;
+`;
+
 // --- The React Component ---
 
 const DashboardPage = () => {
@@ -390,24 +429,24 @@ const DashboardPage = () => {
                     )}
                 </HeaderLeft>
 
-                <div style={{ position: 'relative' }} ref={menuRef}>
-                    <HealthPulsar 
-                        color={auraStyle.color} 
-                        speed={auraStyle.speed}
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    >
-                        <BsFillHeartPulseFill size={40} />
-                    </HealthPulsar>
+                <HeaderRight>
+                    {/* --- THIS IS THE NEW "HEART-BADGE" PROFILE ICON --- */}
+                    <ProfileWrapper ref={menuRef}>
+                        <HeartBadge onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                            <HeartIcon color={auraStyle.color} />
+                            <InitialsText>{userInitials}</InitialsText>
+                        </HeartBadge>
 
-                    {isMenuOpen && (
-                        <OrbitalMenu>
-                            <MenuItem onClick={logout}>
-                                <FaSignOutAlt />
-                                Logout
-                            </MenuItem>
-                        </OrbitalMenu>
-                    )}
-                </div>
+                        {isMenuOpen && (
+                            <OrbitalMenu>
+                                <MenuItem onClick={logout}>
+                                    <FaSignOutAlt />
+                                    Logout
+                                </MenuItem>
+                            </OrbitalMenu>
+                        )}
+                    </ProfileWrapper>
+                </HeaderRight>
             </Header>
             {hubData.latestVitals?.insight_text && (
                 <InsightTickerWrapper bgColor={insightStyle.color}>
