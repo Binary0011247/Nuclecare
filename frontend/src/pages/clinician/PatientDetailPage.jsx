@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext,useRef } from 'react';
+import React, { useState, useEffect, useContext,useRef,useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import { getPatientDetails, addMedicationForPatient } from '../../api/clinician.js';
