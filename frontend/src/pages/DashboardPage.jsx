@@ -78,6 +78,11 @@ const HeaderLeft = styled.div`
   align-items: center;
   gap: 20px;
 `;
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 25px;
+`;
 
 const Brand = styled.h1`
   font-size: 1.8rem;
