@@ -5,7 +5,7 @@ import styled from 'styled-components';
 // --- Styled Components ---
 
 const ChartWrapper = styled.div`
-  height: 100%; /* A fixed height for the chart container */
+  height: 300px ; /* A fixed height for the chart container */
   width: 100%;
 `;
 
@@ -53,30 +53,27 @@ const VitalSignsChart = ({ data }) => {
                         bottom: 5,
                     }}
                 >
-                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                    <XAxis dataKey="name" stroke="#9ca3af" />
+                     <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="name" stroke="#888" />
                     <YAxis 
                         yAxisId="bp" 
                         stroke="#8884d8"
-                        label={{ value: 'BP (mmHg)', angle: -90, position: 'insideLeft', fill: '#8884d8' }}
+                        label={{ value: 'BP (mmHg)', angle: -90, position: 'insideLeft' }}
                     />
                     <YAxis 
                         yAxisId="hr" 
                         orientation="right" 
                         stroke="#82ca9d" 
-                        label={{ value: 'HR (bpm)', angle: 90, position: 'insideRight', fill: '#82ca9d' }}
+                        label={{ value: 'HR (bpm)', angle: 90, position: 'insideRight' }}
                     />
                     <Tooltip 
                         contentStyle={{ 
-                            backgroundColor: 'rgba(27, 39, 53, 0.9)', // Semi-transparent dark blue
-                            border: '1px solid #61dafb', // Vibrant blue border
-                            borderRadius: '8px'
+                            backgroundColor: '#222', 
+                            border: '1px solid #444', 
+                            borderRadius: '8px' 
                         }}
-                        labelStyle={{ color: '#f1c40f', fontWeight: 'bold' }}
-                        itemStyle={{ color: '#fff' }}
-                        cursor={{ stroke: '#61dafb', strokeWidth: 1, strokeDasharray: '3 3' }}
                     />
-                    <Legend wrapperStyle={{ color: '#fff', paddingTop: '20px' }} />
+                    <Legend />
                     
                     <Line 
                         yAxisId="bp" 

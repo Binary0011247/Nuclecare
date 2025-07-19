@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 // --- Styled Components ---
 const ChartWrapper = styled.div`
-  height: 100%;
+  height: 300px; /* A fixed height for the chart container */
   width: 100%;
 `;
 
