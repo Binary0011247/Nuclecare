@@ -14,7 +14,14 @@ import HealthAura from '../components/HealthAura.jsx';
 import LogVitalsForm from '../components/LogVitalsForm.jsx';
 import Modal from '../components/layout/Modal.jsx';
 
-
+const getInitials = (name) => {
+    if (!name) return '..';
+    const parts = name.split(' ');
+    if (parts.length > 1 && parts[0] && parts[parts.length - 1]) {
+        return parts[0][0] + parts[parts.length - 1][0];
+    }
+    return name.substring(0, 2);
+};
 
 
 // --- Keyframes for Animations (for the new menu and pulsar) ---
@@ -298,19 +305,12 @@ const DashboardPage = () => {
 
     if (isLoading) return <Spinner />;
     
-    const { userName, userInitials, patientMrn } = patientProfile ? {
-        userName: patientProfile.full_name,
-        userInitials: getInitials(patientProfile.full_name).toUpperCase(),
-        patientMrn: patientProfile.mrn
-    } : { userName: '', userInitials: '..', patientMrn: ''};
+   const userName = patientProfile?.full_name || '';
+   const userInitials = getInitials(userName).toUpperCase();
+   const patientMrn = patientProfile?.mrn || '';
     
     // getInitials function needs to be defined
-    const getInitials = (name) => {
-        if (!name) return '';
-        const parts = name.split(' ');
-        return parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : name.substring(0, 2);
-    };
-
+    
     return (
         <PageContainer>
             <Header>
@@ -377,10 +377,6 @@ const DashboardPage = () => {
         </PageContainer>
     );
 };
-const getInitials = (name) => {
-    if (!name) return '..';
-    const parts = name.split(' ');
-    return parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : name.substring(0, 2);
-};
+
 
 export default DashboardPage;
