@@ -228,7 +228,7 @@ const DashboardPage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
      const menuRef = useRef(null);
      const [patientMrn, setPatientMrn] = useState('');
-      const [timeOfDay, setTimeOfDay] = useState(getTimeOfDay());
+      //const [timeOfDay, setTimeOfDay] = useState(getTimeOfDay());
 
 
       /*useEffect(() => {
