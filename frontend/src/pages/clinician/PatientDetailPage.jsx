@@ -237,6 +237,26 @@ export const ConfirmButton = styled.button`
     cursor: not-allowed;
   }
 `;
+const insightTicker = keyframes`
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+`;
+const InsightTickerWrapper = styled.div`
+  background-color: ${props => props.bgColor};
+  color: white;
+  padding: 10px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: background-color 1.5s ease;
+  z-index: 50; /* Ensure it's above the main content */
+`;
+const InsightText = styled.p`
+  display: inline-block;
+  padding-left: 100%;
+  animation: ${insightTicker} 20s linear infinite;
+  font-weight: 500;
+`;
+
 // --- The React Component ---
 
 const PatientDetailPage = () => {
@@ -310,6 +330,13 @@ const PatientDetailPage = () => {
         logout();
         navigate('/login'); // Ensure redirection after logout
     };
+    const insightStyle = useMemo(() => {
+        // The latest vital is the first item in the history array
+        const latestHealthScore = patientData.history?.[0]?.health_score ?? 95;
+        if (latestHealthScore > 85) return { color: 'rgba(46, 204, 113, 0.8)' }; // Green
+        if (latestHealthScore > 60) return { color: 'rgba(241, 196, 15, 0.8)' }; // Yellow
+        return { color: 'rgba(231, 76, 60, 0.8)' }; // Red
+    }, [patientData.history]);
 
     if (isLoading) return <Spinner />;
    if (!patientData.profile.id) {
@@ -361,6 +388,7 @@ const PatientDetailPage = () => {
 
     return (
       <>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <PageLayout>
             <Sidebar>
               
@@ -394,6 +422,11 @@ const PatientDetailPage = () => {
             </Sidebar>
 
             <MainContent>
+               {patientData.history?.[0]?.insight_text && (
+                        <InsightTickerWrapper bgColor={insightStyle.color}>
+                            <InsightText>{patientData.history[0].insight_text}</InsightText>
+                        </InsightTickerWrapper>
+                    )}
                 <HealthHub 
                 data={patientData} 
                 isLoading={isLoading} 
@@ -403,6 +436,7 @@ const PatientDetailPage = () => {
                 
             </MainContent>
         </PageLayout>
+        </div>
          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 {activeReport ? (
                     <HealthSynopsisReport report={activeReport} />
